@@ -35,9 +35,8 @@ Iofrontend::Iofrontend(){
     threadMaps = NULL;
     Constant::setExecMethod(launch_create_process);
     Traza::print("Asignando elementos y acciones", W_INFO);
-
     initUIObjs();
-
+    Traza::print("Objetos iniciados", W_INFO);
     geoDrawer = new GeoDrawer(gpsinoW, gpsinoH);
     posiciones = NULL;
     listaPixels = NULL;
@@ -115,12 +114,26 @@ void Iofrontend::initUIObjs(){
     }
 
     ObjectsMenu[PANTALLAGPSINO]->add("lblZoom", GUILABEL, 3, despY, 50, 20, "Zoom: ", false)->setTextColor(cBlanco);
-    despY = 25;
-    ObjectsMenu[PANTALLAGPSINO]->add("lblFile", GUILABEL, 3, despY + 3, 50, 20, "Archivo: ", false)->setTextColor(cBlanco);
+    despY = 30;
 
+    ObjectsMenu[PANTALLAGPSINO]->add("chDownAround",GUICHECK, 5, despY, 150, 20
+                        ,"Imagenes alrededor", false)->setTextColor(cBlanco);
+
+    ObjectsMenu[PANTALLAGPSINO]->add("chDownFull",GUICHECK, 5 + 155, despY, 150, 20
+                        ,"Imagenes area", false)->setTextColor(cBlanco);
+
+    ObjectsMenu[PANTALLAGPSINO]->getObjByName("chDownAround")->setChecked(true);
+    ObjectsMenu[PANTALLAGPSINO]->getObjByName("chDownFull")->setChecked(false);
+
+    despY += 25;
+
+    ObjectsMenu[PANTALLAGPSINO]->add("lblFile", GUILABEL, 3, despY + 3, 50, 20, "Archivo: ", false)->setTextColor(cBlanco);
     ObjectsMenu[PANTALLAGPSINO]->add("inputFileGPX",   GUIINPUTWIDE, despX, despY, 400, 20, "", false);
     ObjectsMenu[PANTALLAGPSINO]->add("btnOpenLocal",   GUIBUTTON, despX + 405, despY,FAMFAMICONW, FAMFAMICONH, "Abrir fichero local", false)->setIcon(folder)->setVerContenedor(false);
     ObjectsMenu[PANTALLAGPSINO]->add("btnDownloadMap", GUIBUTTON, despX + 405 + 5 + FAMFAMICONW ,despY,FAMFAMICONW, FAMFAMICONH, "Descargar mapas", false)->setIcon(map_go)->setVerContenedor(false);
+
+
+
 
 
     ObjectsMenu[PANTALLAGPSINO]->add("progDownload", GUIPROGRESSBAR, 0, getHeight() - 20, getWidth(), 20, "Progreso de descarga", false)->setEnabled(true);
@@ -157,6 +170,10 @@ void Iofrontend::initUIObjs(){
 
     addEvent("btnOpenLocal", &Iofrontend::openGpx);
     addEvent("btnDownloadMap", &Iofrontend::downloadMaps);
+
+    addEvent("chDownAround", &Iofrontend::chActionAround);
+    addEvent("chDownFull", &Iofrontend::chActionFull);
+
 }
 
 /**
@@ -283,6 +300,7 @@ bool Iofrontend::procesarControles(tmenu_gestor_objects *objMenu, tEvento *event
                                 }
                             }
                             break;
+                        //case GUICHECK:
                         case GUILISTBOX:
                         case GUIPROGRESSBAR:
                         case GUISLIDER:
@@ -543,7 +561,6 @@ void Iofrontend::setEvent(string nombre, typept2Func funcion, int parms){
         propertiesPt2Func.parms[pos] = Constant::TipoToStr(parms);
     }
 }
-
 
 /**
 *
@@ -1249,6 +1266,23 @@ int Iofrontend::openGpx(tEvento *evento){
     return 0;
 }
 
+int Iofrontend::chActionAround(tEvento *evento){
+//    addEvent("chDownAround", &Iofrontend::chActionAround);
+//    addEvent("chDownFull", &Iofrontend::chActionFull);
+//    if (evento->isMouse && evento->mouse_state == SDL_RELEASED)
+//        ObjectsMenu[PANTALLAGPSINO]->getObjByName("chDownFull")->setChecked(
+//            ObjectsMenu[PANTALLAGPSINO]->getObjByName("chDownAround")->isChecked());
+
+    return 0;
+}
+int Iofrontend::chActionFull(tEvento *evento){
+    if (evento->isMouse && evento->mouse_state == SDL_RELEASED)
+        ObjectsMenu[PANTALLAGPSINO]->getObjByName("chDownAround")->setChecked(
+            ObjectsMenu[PANTALLAGPSINO]->getObjByName("chDownFull")->isChecked());
+    return 0;
+}
+
+
 /**
 *
 */
@@ -1294,9 +1328,7 @@ int Iofrontend::downloadMaps(tEvento *evento){
                 threadMaps = new Thread<Scrapper>(scrapper, &Scrapper::downImgRoute);
                 threadMaps->start();
             }
-
         }
-
     } catch (Excepcion &e){
         Traza::print("Iofrontend::downloadMaps: " + string(e.getMessage()), W_ERROR);
     }
@@ -1313,14 +1345,16 @@ void Iofrontend::analyzeGpx(string ruta){
     Dirutil dir;
     /**Para generar los ficheros procesados y simplificados*/
     string dataGPS = procesaGPX(ruta, 151);
-//    string fileNameDat = dir.getFolder(dataGPS) + FILE_SEPARATOR + dir.getFileNameNoExt(dataGPS) + ".dat";
+    Traza::print("Iofrontend::analyzeGpx. Generando fichero", W_INFO);
     string fileNameSimple = dir.getFolder(dataGPS) + FILE_SEPARATOR + dir.getFileNameNoExt(dataGPS) + "_simple.dat";
-
+    Traza::print("Iofrontend::analyzeGpx. Guardando fichero", W_INFO);
     //Para generar unos puntos de ejemplo a seguir pulsando la tecla d
     generarFicheroRuta(dataGPS, fileNameSimple, googleZoom[0], 0.0, false);
 
+    Traza::print("Iofrontend::analyzeGpx. Cargando ruta", W_INFO);
     /**Para cargar la ruta*/
     cargarFicheroRuta(fileNameSimple, geoDrawer->getZoomMeters());
+    Traza::print("Iofrontend::analyzeGpx. Cargando estadisticas", W_INFO);
     geoDrawer->logEstadisticasRuta();
 }
 
@@ -2093,10 +2127,12 @@ void Iofrontend::cargarFicheroRuta(string file, int zoomMeters){
         cout << "Abriendo fichero con los puntos del mapa: " <<  processedFile;
         cout << " con un tamanyo de: " << ficheroProcesado.size() << " puntos" << endl;
 
+        if (ficheroProcesado.size() == 0) return;
 
         /**Cargamos las posiciones solo para ejemplo de simulacion de puntos gps al pulsar la tecla d**/
         if (posiciones != NULL)
             delete posiciones;
+
         posiciones = new std::vector<std::string>();
         loadFromFileToVector(file, posiciones);
         cout << "Abriendo fichero con las posiciones de prueba: " <<  file;

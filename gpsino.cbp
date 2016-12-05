@@ -137,7 +137,9 @@
 		</Build>
 		<Compiler>
 			<Add option="-fexceptions" />
+			<Add directory="src" />
 		</Compiler>
+		<Unit filename="../../ExternalLibs/UIObjects/src/common/Ioutil.cpp" />
 		<Unit filename="../BmpRLE/image565.cpp" />
 		<Unit filename="../BmpRLE/image565.h" />
 		<Unit filename="resource.rc">
@@ -145,7 +147,6 @@
 		</Unit>
 		<Unit filename="src/Icogestor.cpp" />
 		<Unit filename="src/Iofrontend.cpp" />
-		<Unit filename="src/Ioutil.cpp" />
 		<Unit filename="src/gpx/GeoStructs.h" />
 		<Unit filename="src/gpx/geodrawer.cpp" />
 		<Unit filename="src/gpx/geodrawer.h" />

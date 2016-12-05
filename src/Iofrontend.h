@@ -8,7 +8,7 @@
 
 #include <string>
 #include <vector>
-#include "Ioutil.h"
+#include "common/Ioutil.h"
 #include "Colorutil.h"
 #include "Menuobject.h"
 #include "ImagenGestor.h"
@@ -37,6 +37,16 @@
         SDL_Surface *tmpSurface;
     };
 
+    //*********************************************************************************/
+    //Cuidado con no sobrepasar el numero de elementos que define la constante MAXMENU
+    //*********************************************************************************/
+     typedef enum { PANTALLAGPSINO,     //0
+            PANTALLACONFIRMAR,
+            PANTALLABROWSER2,
+            PANTALLAPREGUNTA,
+            PANTALLAMAP,
+            MAXMENU
+    } enumMenus;
 
 
 
@@ -138,6 +148,8 @@ class Iofrontend : public Ioutil{
 
         int openGpx(tEvento *evento);
         int downloadMaps(tEvento *evento);
+        int chActionAround(tEvento *evento);
+        int chActionFull(tEvento *evento);
 
         string procesaGPX(string filename, int angulo);
         void analyzeGpx(string ruta);
