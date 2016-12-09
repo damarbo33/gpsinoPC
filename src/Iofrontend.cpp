@@ -5,8 +5,8 @@
 
 
 const int SURFACE_MODE = SDL_SWSURFACE;
-static const int gpsinoW = 128;
-static const int gpsinoH = 160;
+static const int gpsinoW = 512;
+static const int gpsinoH = 300;
 static int limitW = 0;
 static int limitH = 0;
 static int limitX = 0;
@@ -131,13 +131,8 @@ void Iofrontend::initUIObjs(){
     ObjectsMenu[PANTALLAGPSINO]->add("inputFileGPX",   GUIINPUTWIDE, despX, despY, 400, 20, "", false);
     ObjectsMenu[PANTALLAGPSINO]->add("btnOpenLocal",   GUIBUTTON, despX + 405, despY,FAMFAMICONW, FAMFAMICONH, "Abrir fichero local", false)->setIcon(folder)->setVerContenedor(false);
     ObjectsMenu[PANTALLAGPSINO]->add("btnDownloadMap", GUIBUTTON, despX + 405 + 5 + FAMFAMICONW ,despY,FAMFAMICONW, FAMFAMICONH, "Descargar mapas", false)->setIcon(map_go)->setVerContenedor(false);
-
-
-
-
-
     ObjectsMenu[PANTALLAGPSINO]->add("progDownload", GUIPROGRESSBAR, 0, getHeight() - 20, getWidth(), 20, "Progreso de descarga", false)->setEnabled(true);
-    ObjectsMenu[PANTALLAGPSINO]->add("mapBox", GUIPICTURE, 2, Constant::getINPUTH()*3 + 25 * 2, gpsinoW, gpsinoH, "mapBox", false)->setVisible(false);
+    ObjectsMenu[PANTALLAGPSINO]->add("mapBox", GUIPICTURE, 2, Constant::getINPUTH()*3 + 25 * 2, gpsinoW, gpsinoH, "mapBox", false)->setVisible(true);
 
 
     UIPicture *objPict = (UIPicture *)ObjectsMenu[PANTALLAGPSINO]->getObjByName("mapBox");
@@ -204,7 +199,7 @@ int Iofrontend::casoDEFAULT(tEvento evento){
     bool salir = procesarControles(objMenu, &evento, NULL);
 
     if (getSelMenu() == PANTALLAGPSINO){
-        //drawMapArduino(&evento);
+        drawMapArduino(&evento);
     }
 
     return salir;
@@ -585,30 +580,30 @@ void Iofrontend::setDinamicSizeObjects(){
     try{
         //Calculamos el tamanyo del titulo de los elementos que lo tengan, y redimensionamos el elemento
         //lista que tenga ese menu con el total de la ventana que queda
-        for (int i=0; i<MAXMENU; i++){
-            try{
-                ObjectsMenu[i]->getObjByName(TITLESCREEN)->setTam( 0, 0, this->getWidth(),Constant::getINPUTH());
-                int j = 0;
-                Object *posibleObj = NULL;
-
-                while (j < ObjectsMenu[i]->getSize()){
-                    posibleObj = ObjectsMenu[i]->getObjByPos(j);
-                    if(posibleObj != NULL){
-                        if (posibleObj->getObjectType() == GUILISTBOX || ObjectsMenu[i]->getObjByPos(j)->getObjectType() == GUIPICTURE
-                            || posibleObj->getObjectType() == GUILISTGROUPBOX){
-                            posibleObj->setTam(0,Constant::getINPUTH(), this->getWidth(), this->getHeight()-Constant::getINPUTH());
-                        }
-
-                        if (ObjectsMenu[i]->getObjByPos(j)->getObjectType() == GUILISTBOX){
-                            ((UIList *)posibleObj)->calcularScrPos();
-                        } else if (ObjectsMenu[i]->getObjByPos(j)->getObjectType() == GUILISTGROUPBOX){
-                            ((UIListGroup *)posibleObj)->calcularScrPos();
-                        }
-                    }
-                    j++;
-                }
-            } catch (Excepcion &e){}
-        }
+//        for (int i=0; i<MAXMENU; i++){
+//            try{
+//                //ObjectsMenu[i]->getObjByName(TITLESCREEN)->setTam( 0, 0, this->getWidth(),Constant::getINPUTH());
+//                int j = 0;
+//                Object *posibleObj = NULL;
+//
+//                while (j < ObjectsMenu[i]->getSize()){
+//                    posibleObj = ObjectsMenu[i]->getObjByPos(j);
+//                    if(posibleObj != NULL){
+//                        if (posibleObj->getObjectType() == GUILISTBOX || ObjectsMenu[i]->getObjByPos(j)->getObjectType() == GUIPICTURE
+//                            || posibleObj->getObjectType() == GUILISTGROUPBOX){
+//                            posibleObj->setTam(0,Constant::getINPUTH(), this->getWidth(), this->getHeight()-Constant::getINPUTH());
+//                        }
+//
+//                        if (ObjectsMenu[i]->getObjByPos(j)->getObjectType() == GUILISTBOX){
+//                            ((UIList *)posibleObj)->calcularScrPos();
+//                        } else if (ObjectsMenu[i]->getObjByPos(j)->getObjectType() == GUILISTGROUPBOX){
+//                            ((UIListGroup *)posibleObj)->calcularScrPos();
+//                        }
+//                    }
+//                    j++;
+//                }
+//            } catch (Excepcion &e){}
+//        }
 
         //Redimension para el browser de directorios2
         ObjectsMenu[PANTALLABROWSER2]->getObjByName(OBJLISTABROWSER2)->setTam(0, Constant::getINPUTH() + COMBOHEIGHT + 4,this->getWidth(), this->getHeight() - BUTTONH - Constant::getINPUTH() - COMBOHEIGHT - 10 - 4);
@@ -616,10 +611,7 @@ void Iofrontend::setDinamicSizeObjects(){
         ObjectsMenu[PANTALLABROWSER2]->getObjByName(BTNACEPTARBROWSER)->setTam( (this->getWidth() / 2) -(BUTTONW + 5), this->getHeight() - BUTTONH - 5, BUTTONW,BUTTONH);
         ObjectsMenu[PANTALLABROWSER2]->getObjByName(BTNCANCELARBROWSER)->setTam( (this->getWidth() / 2) + 5, this->getHeight() - BUTTONH - 5, BUTTONW,BUTTONH);
         ObjectsMenu[PANTALLABROWSER2]->getObjByName(ARTDIRBROWSER)->setTam( 0, 0, this->getWidth(), Constant::getINPUTH());
-
-        //Redimension para la pantalla de videos multimedia
-        int desp = (this->getWidth() / 2) - FAMFAMICONW*2 - BUTTONW/2;
-        int bottom = this->getHeight() - FAMFAMICONH - ICOBOTTOMSPACE;
+        ObjectsMenu[PANTALLAGPSINO]->getObjByName("mapBox")->setTam(2, Constant::getINPUTH()*3 + 25 * 2, gpsinoW, gpsinoH);
     } catch (Excepcion &e){
         Traza::print("setDinamicSizeObjects: " + string(e.getMessage()), W_ERROR);
     }
@@ -1344,7 +1336,7 @@ void Iofrontend::analyzeGpx(string ruta){
 
     Dirutil dir;
     /**Para generar los ficheros procesados y simplificados*/
-    string dataGPS = procesaGPX(ruta, 151);
+    string dataGPS = procesaGPX(ruta, 180);
     Traza::print("Iofrontend::analyzeGpx. Generando fichero", W_INFO);
     string fileNameSimple = dir.getFolder(dataGPS) + FILE_SEPARATOR + dir.getFileNameNoExt(dataGPS) + "_simple.dat";
     Traza::print("Iofrontend::analyzeGpx. Guardando fichero", W_INFO);
@@ -1516,12 +1508,11 @@ void Iofrontend::drawMapArduino(tEvento *evento){
         }
 
         UIPicture *objPict = (UIPicture *)ObjectsMenu[PANTALLAGPSINO]->getObjByName("mapBox");
+
+        SDL_FillRect(objPict->getImgGestor()->getSurface(), NULL, 0xFFFFFFFF);
+
         //Acciones del teclado
         if (evento != NULL){
-            if (evento->isKey){
-                SDL_FillRect(objPict->getImgGestor()->getSurface(), NULL, 0xFFFFFFFF);
-            }
-
             if (evento->isKey && evento->key == SDLK_a){
                 geoDrawer->incZoomLevel();
                 //Cargamos la ruta de nuevo con la informacion de pixels precalculada para la ruta
@@ -1555,7 +1546,7 @@ void Iofrontend::drawMapArduino(tEvento *evento){
                     std::vector<std::string> strSplitted = Constant::split(posiciones->at(posTempArray),",");
                     currentGPSPos.setLatitude(geoDrawer->todouble(strSplitted.at(0)));
                     currentGPSPos.setLongitude(geoDrawer->todouble(strSplitted.at(1)));
-                    pintarCapaTerreno(&currentGPSPos);
+                    //pintarCapaTerreno(&currentGPSPos);
                 }
                 //* FIN
                 if (evento->key == SDLK_d){
@@ -1565,11 +1556,12 @@ void Iofrontend::drawMapArduino(tEvento *evento){
         }
     //    drawText(Constant::TipoToStr(posTempArray).c_str(), 20, 20, cNegro);
         calcularPixels(&lastGPSPos, &currentGPSPos, &latestCoord, &actualCoord);
-        if (posTempArray == 0){
-            pintarCapaTerreno(&currentGPSPos);
-        } else {
-            pintarCapaTerreno(NULL);
-        }
+
+//        if (posTempArray == 0){
+//            pintarCapaTerreno(&currentGPSPos);
+//        } else {
+//            pintarCapaTerreno(NULL);
+//        }
 
         int nCampos = 0;
         PosMapa dataFromFile;
@@ -1585,25 +1577,23 @@ void Iofrontend::drawMapArduino(tEvento *evento){
 
 
         while ((puntos = leerCamposDat(fp, &dataFromFile)) >= 0){
-    //        cout << "linea leida" << endl;
+            //cout << "linea leida" << endl;
             if (puntos >= LINETRACKDATA){
                 //Procesamos la linea y obtenemos los datos para pintar el track
                 //si estamos en la linea de datos y es el final de la linea
                 if (puntos > LINETRACKDATA){
-
                     //Hasta que no tenemos dos puntos no podemos pintar
                     posXY2.x =  dataFromFile.point.x + geoDrawer->getMapOffsetX();
                     posXY2.y =  dataFromFile.point.y + geoDrawer->getMapOffsetY();
-    //                    cout << "Linetrack "  << puntos << posXY2.x << "," << posXY2.y << endl;
+                    //cout << "Linetrack "  << puntos << posXY2.x << "," << posXY2.y << endl;
                     /**Dibujamos la linea del track que une los puntos. No podemos limitar porque es posible que
                     * al simplificar puntos, estos queden fuera de la pantalla, pero su vector si que puede pasar
                     * por pantalla.
                     * TODO: Posibilidad de calcular si quedan fuera de pantalla*/
-                    //pintarLinea(posXY.x, posXY.y, posXY2.x, posXY2.y, puntos < lastPointVisited ? cRojo : cNegro);
-                    plotLineWidth(posXY.x, posXY.y, posXY2.x, posXY2.y, 4 ,puntos < lastPointVisited ? cRojo : cNegro,
+//                    pintarLinea(posXY.x, posXY.y, posXY2.x, posXY2.y, puntos < lastPointVisited ? cRojo : cNegro);
+                    plotLineWidth(posXY.x, posXY.y, posXY2.x, posXY2.y, 0 ,puntos < lastPointVisited ? cRojo : cNegro,
                                   objPict->getImgGestor()->getSurface());
                     //cout << dataFromFile.point.x << ":" << dataFromFile.point.y << " .... " << posXY.x << "," << posXY.y << " - " << posXY2.x << "," << posXY2.y << endl;
-
                     //Dibujamos el texto del waypoint. Tambien dibujamos siempre un punto indicando su localizacion
                     if (!lastDataFromFile.name.empty()){
                         if (drawWaypoints && posXY.x <= actualCoord.x + maxDistPxWaypoint && posXY.x >= actualCoord.x - maxDistPxWaypoint
@@ -1679,14 +1669,15 @@ void Iofrontend::drawMapArduino(tEvento *evento){
     //    }
 
 
-
-        //pintarFlechaGPS(&actualCoord, geoDrawer->calculaAnguloDireccion(&latestCoord, &actualCoord));
-        //mostrarDatosRuta(pendiente, distFromStart, eleActual, waypointText.c_str());
-
         SDL_Rect dest = {objPict->getX(),objPict->getY(),objPict->getW(), objPict->getH()};
         SDL_Rect orig = {0,0,objPict->getW(), objPict->getH()};
-
         SDL_BlitSurface(objPict->getImgGestor()->getSurface(), &orig, screen, &dest);
+
+        Point actualCoordRelativeToImg = actualCoord;
+        actualCoordRelativeToImg.x += objPict->getX();
+        actualCoordRelativeToImg.y += objPict->getY();
+        pintarFlechaGPS(&actualCoordRelativeToImg, geoDrawer->calculaAnguloDireccion(&latestCoord, &actualCoord));
+        //mostrarDatosRuta(pendiente, distFromStart, eleActual, waypointText.c_str());
 
         latestMinDist = minDist;
         lastPointVisited = latestPixelToDist;

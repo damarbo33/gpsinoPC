@@ -3169,12 +3169,12 @@
 	<iostream>
 	<fstream>
 
-1480954425 c:\github\proyectos\gpsinopc\src\main.h
+1480955538 c:\github\proyectos\gpsinopc\src\main.h
 	<stdio.h>
 	"common/Ioutil.h"
 	"Iofrontend.h"
 
-1480954415 c:\github\proyectos\gpsinopc\src\iofrontend.h
+1480955538 c:\github\proyectos\gpsinopc\src\iofrontend.h
 	<string>
 	<vector>
 	"common/Ioutil.h"
@@ -3214,7 +3214,7 @@
 1470830347 source:c:\github\proyectos\gpsinopc\src\scrapper\scrapper.cpp
 	"scrapper.h"
 
-1480954165 source:c:\github\proyectos\gpsinopc\src\iofrontend.cpp
+1481130063 source:c:\github\proyectos\gpsinopc\src\iofrontend.cpp
 	"Iofrontend.h"
 	"uilistgroup.h"
 	"beans/listgroupcol.h"

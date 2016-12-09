@@ -32,6 +32,7 @@
 					<Add directory="../../ExternalLibs/tidy/include" />
 					<Add directory="gpsino/src/scrapper" />
 					<Add directory="gpsino/src/updater" />
+					<Add directory="../BmpRLE" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -137,6 +138,7 @@
 		</Build>
 		<Compiler>
 			<Add option="-fexceptions" />
+			<Add option="-DWIN" />
 			<Add directory="src" />
 		</Compiler>
 		<Unit filename="../../ExternalLibs/UIObjects/src/common/Ioutil.cpp" />
