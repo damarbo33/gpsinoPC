@@ -113,9 +113,7 @@ class Iofrontend : public Ioutil{
         void showMenuEmergente(int menu, string objImagenFondo);
         void loadComboUnidades(string objName, int pantalla,  int types);
 
-
-
-
+        void drawTile(VELatLong *currentLatLon, int zoom, int sideTileX, int sideTileY, Point numTile, Point pixelTile);
 
         void leerLineaFicheroRuta(char *text, int numLinea, int *numCampo, PosMapa *data);
         int getPosY(int altura, int graphW, int graphH);
@@ -134,18 +132,8 @@ class Iofrontend : public Ioutil{
         void cargarFicheroRuta(string file, int zoomMeters);
         void loadFromFileToVector(string file, std::vector<std::string> *myVector);
         void pintarCapaTerreno(VELatLong *currentGPSPos);
-        void getSurfaceMap(SDL_Surface **myDestSurface, Point *pixelTile, int xtile, int ytile, int zoom);
-        Uint32 getPixelFromOrientarion(t_mapSurface *mapSurfaces, int orientacion, int virtualMapX, int virtualMapY, int mapWidth, int mapHeight);
-        void getPosPixelFromOrient(int orientacion, int virtualMapX, int virtualMapY,
-                                    int mapWidth, int mapHeight, t_iPos *pos);
-        void getAroundTile(int xtile, int ytile, int orientacion, t_posicion *posTile);
-        int getDrawableMapOrientation(int virtualMapX, int virtualMapY, int mapWidth, int mapHeight);
-        Uint32 get_pixel32( SDL_Surface *surface, int x, int y);
-        void put_pixel32( SDL_Surface *surface, int x, int y, Uint32 pixel );
         void showIcons();
         int calcNumProcessedPoints(string fileOri, int zoomMeters, double anguloLimite);
-
-
         int openGpx(tEvento *evento);
         int downloadMaps(tEvento *evento);
         int chActionAround(tEvento *evento);

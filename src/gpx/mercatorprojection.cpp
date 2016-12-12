@@ -61,11 +61,22 @@ void MercatorProjection::fromPointToLatLng(Point *point, VELatLong *latLng){
 * Dada la esquina superior izquierda de un tile de un mapa, permite obtener
 * cual es la posicion x,y en el mismo mapa de otra lat,lon especificada
 */
-void MercatorProjection::getPosPixelTile(VELatLong *NWLatLon, VELatLong *currentLatLon, int zoom, int mapWidth, int mapHeight,
-                                         Point *MapXY){
+void MercatorProjection::getPosPixelTile(VELatLong *currentLatLon, int zoom, Point *MapXY, Point *numTile){
     double scale = pow(2, zoom);
     Point NWPoint;
     Point currentPoint;
+
+    GeoStructs geoStruct;
+    numTile->x = geoStruct.long2tilex(currentLatLon->getLongitude(), zoom);
+    numTile->y = geoStruct.lat2tiley(currentLatLon->getLatitude(), zoom);
+
+    //el xtile es la posicion del latitud y longitud segun la esquina del mapa
+    double longitud = geoStruct.tilex2long(numTile->x, zoom);
+    double latitud = geoStruct.tiley2lat(numTile->y, zoom);
+
+    //Indicamos la esquina del mapa que debe coincidir con la obtenida por la posicion del tile
+    VELatLong *NWLatLon = new VELatLong(latitud, longitud);
+
 
     fromLatLngToPoint(NWLatLon, &NWPoint);
     fromLatLngToPoint(currentLatLon, &currentPoint);

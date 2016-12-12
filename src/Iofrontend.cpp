@@ -5,8 +5,12 @@
 
 
 const int SURFACE_MODE = SDL_SWSURFACE;
-static const int gpsinoW = 512;
-static const int gpsinoH = 300;
+//static const int gpsinoW = 800;
+//static const int gpsinoH = 600;
+static const int gpsinoW = 128;
+static const int gpsinoH = 160;
+static const int mapWidth = 256;
+static const int mapHeight = 256;
 static int limitW = 0;
 static int limitH = 0;
 static int limitX = 0;
@@ -110,6 +114,7 @@ void Iofrontend::initUIObjs(){
                         ,Constant::TipoToStr(googleZoom[i]), false)->setEnabled(true);
 
         ObjectsMenu[PANTALLAGPSINO]->getObjByName(checkName)->setTextColor(cBlanco);
+        if (i==0)
         ObjectsMenu[PANTALLAGPSINO]->getObjByName(checkName)->setChecked(true);
     }
 
@@ -141,14 +146,12 @@ void Iofrontend::initUIObjs(){
     limitX = objPict->getX();
     limitY = objPict->getY();
 
-
-
-    string ruta = "LogoGpsino.png";
-    if (objPict->getImgGestor()->getRuta().compare(ruta) != 0){
-        objPict->loadImgFromFile(ruta);
-        objPict->getImgGestor()->setBestfit(false);
-        objPict->setImgDrawed(false);
-    }
+//    string ruta = "LogoGpsino.png";
+//    if (objPict->getImgGestor()->getRuta().compare(ruta) != 0){
+//        objPict->loadImgFromFile(ruta);
+//        objPict->getImgGestor()->setBestfit(false);
+//        objPict->setImgDrawed(false);
+//    }
 
     //Establecemos los elementos que se redimensionan
     setDinamicSizeObjects();
@@ -611,7 +614,11 @@ void Iofrontend::setDinamicSizeObjects(){
         ObjectsMenu[PANTALLABROWSER2]->getObjByName(BTNACEPTARBROWSER)->setTam( (this->getWidth() / 2) -(BUTTONW + 5), this->getHeight() - BUTTONH - 5, BUTTONW,BUTTONH);
         ObjectsMenu[PANTALLABROWSER2]->getObjByName(BTNCANCELARBROWSER)->setTam( (this->getWidth() / 2) + 5, this->getHeight() - BUTTONH - 5, BUTTONW,BUTTONH);
         ObjectsMenu[PANTALLABROWSER2]->getObjByName(ARTDIRBROWSER)->setTam( 0, 0, this->getWidth(), Constant::getINPUTH());
-        ObjectsMenu[PANTALLAGPSINO]->getObjByName("mapBox")->setTam(2, Constant::getINPUTH()*3 + 25 * 2, gpsinoW, gpsinoH);
+        int mapPosY = Constant::getINPUTH()*3 + 25 * 2;
+
+        //ObjectsMenu[PANTALLAGPSINO]->getObjByName("mapBox")->setTam(2, mapPosY, getWidth(), getHeight() - 20 - mapPosY - 5);
+        ObjectsMenu[PANTALLAGPSINO]->getObjByName("progDownload")->setTam( 0, getHeight() - 20, getWidth(), 20);
+
     } catch (Excepcion &e){
         Traza::print("setDinamicSizeObjects: " + string(e.getMessage()), W_ERROR);
     }
@@ -1509,7 +1516,7 @@ void Iofrontend::drawMapArduino(tEvento *evento){
 
         UIPicture *objPict = (UIPicture *)ObjectsMenu[PANTALLAGPSINO]->getObjByName("mapBox");
 
-        SDL_FillRect(objPict->getImgGestor()->getSurface(), NULL, 0xFFFFFFFF);
+        //SDL_FillRect(objPict->getImgGestor()->getSurface(), NULL, 0xFFFFFFFF);
 
         //Acciones del teclado
         if (evento != NULL){
@@ -1548,7 +1555,7 @@ void Iofrontend::drawMapArduino(tEvento *evento){
                     currentGPSPos.setLongitude(geoDrawer->todouble(strSplitted.at(1)));
                     //pintarCapaTerreno(&currentGPSPos);
                 }
-                //* FIN
+
                 if (evento->key == SDLK_d){
                     posTempArray++;
                 }
@@ -1559,9 +1566,12 @@ void Iofrontend::drawMapArduino(tEvento *evento){
 
 //        if (posTempArray == 0){
 //            pintarCapaTerreno(&currentGPSPos);
-//        } else {
-//            pintarCapaTerreno(NULL);
 //        }
+//        else {
+//            pintarCapaTerreno(&currentGPSPos);
+//        }
+
+        pintarCapaTerreno(&currentGPSPos);
 
         int nCampos = 0;
         PosMapa dataFromFile;
@@ -1573,8 +1583,6 @@ void Iofrontend::drawMapArduino(tEvento *evento){
         bool foundPendiente = false;
         int n=0;
         char tmpLine[maxLine];
-
-
 
         while ((puntos = leerCamposDat(fp, &dataFromFile)) >= 0){
             //cout << "linea leida" << endl;
@@ -2228,498 +2236,134 @@ void Iofrontend::loadFromFileToVector(string file, std::vector<std::string> *myV
 */
 void Iofrontend::pintarCapaTerreno(VELatLong *currentGPSPos){
 
-    ImagenGestor imgGestor;
-
     if (currentGPSPos != NULL){
         const int zoom = geoDrawer->getZoomMeters();
-        const int mapWidth = 256;
-        const int mapHeight = 256;
 
-        GeoStructs geoStruct;
-        int xtile = geoStruct.long2tilex(currentGPSPos->getLongitude(), zoom);
-        int ytile = geoStruct.lat2tiley(currentGPSPos->getLatitude(), zoom);
-//        cout << "Lon: " << currentGPSPos->getLongitude() << ", "
-//        << "Lat: " << currentGPSPos->getLatitude() << ", "
-//        << "x: " << xtile << ", "
-//        << "y: " << ytile << endl;
-
-        //Calculamos cual seria el punto del tile para esa longitud y latitud
+        /**Obtener el tile correspondiente a la latitud y longitud.*/
+        Point pixelTile, numTile;
         MercatorProjection merca;
-        VELatLong *SELatLon = new VELatLong(currentGPSPos->getLatitude(), currentGPSPos->getLongitude());
-        Point pixelTile;
-
-        //el xtile es la posicion del latitud y longitud segun la esquina del mapa
-        double longitud = geoStruct.tilex2long(xtile, zoom);
-        double latitud = geoStruct.tiley2lat(ytile, zoom);
-        //Indicamos la esquina del mapa que debe coincidir con la obtenida por la posicion del tile
-        VELatLong *esquinaNW = new VELatLong(latitud, longitud);
         //Obtenemos en pixelTile, el pixel exacto en el que se encuentra nuestra lat y lon
         //en el propio tile
-        merca.getPosPixelTile(esquinaNW, SELatLon, zoom, mapWidth, mapHeight, &pixelTile);
-//        cout << "PixelTile: " << pixelTile.x << "," << pixelTile.y << endl;
-        getSurfaceMap(&myGPSSurface, &pixelTile, xtile, ytile, zoom);
-    }
+        merca.getPosPixelTile(currentGPSPos, zoom, &pixelTile, &numTile);
 
-    if (myGPSSurface != NULL){
-        imgGestor.blitImage(myGPSSurface, screen, NULL, false);
-    }
-}
+//        Traza::print("xtile: " + Constant::TipoToStr(numTile.x) + ", " +
+//                     "ytile: " + Constant::TipoToStr(numTile.y), W_DEBUG);
 
-/**
-*
-*/
-void Iofrontend::getSurfaceMap(SDL_Surface **myDestSurface, Point *pixelTile, int xtile, int ytile, int zoom){
-    ImagenGestor imgGestor;
-    const int mapWidth = 256;
-    const int mapHeight = 256;
-    t_posicion posTile;
-    Dirutil dir;
-    t_mapSurface mapSurfaces[4];
-    string imgLocation = "";
-    int areasMapa[4];
-    SDL_Rect area;
-    int virtualMapX = 0;
-    int virtualMapY = 0;
-    int orientacion = 0;
+        /**Dibujar el tile centrado en la posicion central en la pantalla y los del alrededor*/
+        UIPicture *objPict = (UIPicture *)ObjectsMenu[PANTALLAGPSINO]->getObjByName("mapBox");
+        SDL_Surface *myDestSurface = objPict->getImgGestor()->getSurface();
+        //Color blanco de fondo
+        SDL_FillRect(myDestSurface, NULL, SDL_MapRGB(myDestSurface->format, cBlanco.r,cBlanco.g,cBlanco.b));
+        objPict->setImgDrawed(false);
+        Point newPos;
+        newPos.x = objPict->getW() / 2 - pixelTile.x;
+        newPos.y = objPict->getH() / 2 - pixelTile.y;
 
+        int countTileX = 0, countTileY = 0;
+        int posTile00Left, posTile00Right, posTile00Up, posTile00Down;
+        bool leftLimit = false;
+        bool rightLimit = false;
+        bool upLimit = false;
+        bool downLimit = false;
+        int numTilesDrawed = 0;
 
-//    cout << "limpiando surfaces" << endl;
-    if (*myDestSurface != NULL){
-        SDL_FreeSurface(*myDestSurface);
-        *myDestSurface = NULL;
-    }
+        while (!upLimit || !downLimit){
+            countTileX = 0;
+            leftLimit = false;
+            rightLimit = false;
+            posTile00Up = newPos.y + mapHeight * (-1 * countTileY);
+            posTile00Down = newPos.y + mapHeight * countTileY;
+            upLimit = posTile00Up <= -1 * mapHeight;
+            downLimit = posTile00Down > objPict->getH();
 
-    area.x =  this->getWidth() / 2.0 - pixelTile->x;
-    area.y =  this->getHeight() / 2.0 - pixelTile->y;
-    area.w = this->getWidth();
-    area.h = this->getHeight();
+            while (!leftLimit || !rightLimit){
+                posTile00Left  = newPos.x + mapWidth * (-1 * countTileX);
+                posTile00Right = newPos.x + mapWidth * countTileX;
+                leftLimit = posTile00Left <= -1 * mapWidth;
+                rightLimit = posTile00Right > objPict->getW();
 
-    //Obtenemos los mapas que debemos pintar
-    //areaSupIzq
-    areasMapa[0] = getDrawableMapOrientation(1 - area.x, 1 - area.y, mapWidth, mapHeight);
-    //areaSupDer
-    areasMapa[1] = getDrawableMapOrientation(this->getWidth() - 1 - area.x, 1 - area.y, mapWidth, mapHeight);
-    //areaInfIzq
-    areasMapa[2] = getDrawableMapOrientation(1 - area.x, this->getHeight() - 1 - area.y, mapWidth, mapHeight);
-    //areaInfDer
-    areasMapa[3] = getDrawableMapOrientation(this->getWidth() - 1 - area.x, this->getHeight() - 1 - area.y, mapWidth, mapHeight);
-
-
-//    cout << area.x << ";" << area.y << endl;
-
-    int limites[4][4];
-    limites[0][0] = 0;
-    limites[0][1] = 0;
-    limites[0][2] = mapWidth + area.x - 1;
-    limites[0][3] = mapHeight + area.y - 1;
-
-    if (limites[0][2] > this->getWidth())
-        limites[0][2] = this->getWidth();
-
-    if (limites[0][3] > this->getHeight())
-        limites[0][3] = this->getHeight();
-
-    limites[1][0] = limites[0][2] + 1;
-    limites[1][1] = 0;
-    limites[1][2] = this->getWidth() - 1;
-    limites[1][3] = limites[0][3];
-
-    limites[2][0] = 0;
-    limites[2][1] = limites[0][3] + 1;
-    limites[2][2] = limites[0][2];
-    limites[2][3] = this->getHeight() - 1;
-
-    limites[3][0] = limites[0][2] + 1;
-    limites[3][1] = limites[0][3] + 1;
-    limites[3][2] = this->getWidth() - 1;
-    limites[3][3] = this->getHeight() - 1;
-
-//    cout << "limites generados" << endl;
-
-
-
-    for (int i=0; i < 4; i++){
-        getAroundTile(xtile, ytile, areasMapa[i], &posTile);
-        imgLocation = dir.getFolder(fileGPSData) + FILE_SEPARATOR + "Tiles"
-                    + FILE_SEPARATOR + Constant::TipoToStr(zoom)
-                    + FILE_SEPARATOR + Constant::TipoToStr(posTile.x)
-                    + FILE_SEPARATOR + Constant::TipoToStr(posTile.y)
-                    + string(".png");
-
-        //cout << imgLocation << endl;
-
-        if (dir.existe(imgLocation))
-            imgGestor.loadImgFromFile(imgLocation.c_str(), &mapSurfaces[i].tmpSurface);
-        else
-            mapSurfaces[i].tmpSurface = NULL;
-
-        mapSurfaces[i].orientacion = areasMapa[i];
-    }
-
-    //Creamos la superficie donde pintamos el mapa definitivo por pantalla
-    if (mapSurfaces[0].tmpSurface != NULL){
-        *myDestSurface = SDL_CreateRGBSurface( SURFACE_MODE, getWidth(), getHeight(), mapSurfaces[0].tmpSurface->format->BitsPerPixel,
-                                        mapSurfaces[0].tmpSurface->format->Rmask,mapSurfaces[0].tmpSurface->format->Gmask,
-                                        mapSurfaces[0].tmpSurface->format->Bmask,
-                                        mapSurfaces[0].tmpSurface->format->Amask);
-    } else {
-        *myDestSurface = SDL_CreateRGBSurface( SURFACE_MODE, getWidth(), getHeight(), screen->format->BitsPerPixel,
-                                        screen->format->Rmask,screen->format->Gmask,
-                                        screen->format->Bmask,
-                                        screen->format->Amask);
-    }
-
-    //Color blanco de fondo
-    SDL_FillRect(*myDestSurface, NULL, SDL_MapRGB(screen->format, cBlanco.r,cBlanco.g,cBlanco.b));
-
-    unsigned long time = SDL_GetTicks();
-
-    //Empezamos a dibujar los mapas correspondientes en pantalla
-    /*
-    for (int scanLineH = 0; scanLineH < this->getWidth(); scanLineH++){
-        for (int scanLineV = 0; scanLineV < this->getHeight(); scanLineV++){
-            virtualMapX = scanLineH - area.x;
-            virtualMapY = scanLineV - area.y;
-            orientacion = getDrawableMapOrientation(virtualMapX, virtualMapY, mapWidth, mapHeight);
-            put_pixel32(*myDestSurface, scanLineH, scanLineV,
-                                getPixelFromOrientarion(mapSurfaces, orientacion, virtualMapX, virtualMapY, mapWidth, mapHeight));
-        }
-    }*/
-
-
-    int pintado[4]={-1,-1,-1,-1};
-    int lastOrientacion = -1;
-    int scanLineV=0;
-    int scanLineH=0;
-    const int boundX = abs(area.x);
-    const int boundY = abs(area.y);
-
-    t_iPos dstRect;
-    t_iPos srcRect;
-    t_iPos tmpRect;
-
-    int xInicioBMP = mapWidth;
-    int yInicioBMP = mapHeight;
-    const int BUFFPIXEL = 20;
-    int puntosPintarBuffer = 0;
-    int vMapX, vMapY;
-
-
-    int rngX[2]={getWidth(), 0};
-    int rngY[2]={getHeight(),0};
-
-    for (int i=0; i < 4; i++){
-
-        rngX[0] = getWidth();
-        rngX[1] = 0;
-        rngY[0] = getHeight();
-        rngY[1] = 0;
-
-        if (lastOrientacion != areasMapa[i]){
-            //for (int vMapY= -boundY; vMapY < mapHeight + boundY; vMapY++){
-            //for (scanLineH = limites[i][0]; scanLineH < limites[i][2]; scanLineH++){
-            for (scanLineH = 0; scanLineH < getWidth(); scanLineH++){
-                xInicioBMP = mapWidth;
-                //for (int vMapX= -boundX; vMapX < mapWidth + boundX; vMapX++){
-                //for (scanLineV = limites[i][1]; scanLineV < limites[i][3]; scanLineV++){
-                for (scanLineV = 0; scanLineV < getHeight(); scanLineV++){
-                    //scanLineH = vMapX + area.x;
-                    //scanLineV = vMapY + area.y;
-                    vMapX = scanLineH - area.x;
-                    vMapY = scanLineV - area.y;
-
-                    orientacion = getDrawableMapOrientation(vMapX, vMapY, mapWidth, mapHeight);
-                    //Comprobaciones para no repintar los mapas mas de una vez
-                    if (orientacion == mapSurfaces[i].orientacion
-                        && pintado[0] != orientacion && pintado[1] != orientacion &&
-                        pintado[2] != orientacion && pintado[3] != orientacion){
-                        lastOrientacion = orientacion;
-                        //Para arduino, recogemos desde la sd sizeof(sdbuffer) pixels
-                        //y vamos pintando desde el array sdbuffer
-                        //En primer lugar obtenemos en tmpRect.x & tmpRect.y, la posicion
-                        //del mapa que hay que pintar
-                        getPosPixelFromOrient(orientacion, vMapX, vMapY, mapWidth, mapHeight, &tmpRect);
-                        //cout << tmpRect.x << "," << tmpRect.y << endl;
-                        //Hacemos las carga del sdbuffer a partir de la posicion de tmpRect.x & tmpRect.y
-                        if (tmpRect.x < xInicioBMP || tmpRect.x - xInicioBMP > BUFFPIXEL){
-                            xInicioBMP = tmpRect.x;
-                            yInicioBMP = tmpRect.y;
-                        }
-
-                        if (scanLineH == getWidth() - 1){
-                            puntosPintarBuffer = tmpRect.x - xInicioBMP;
-                            //cout << puntosPintarBuffer << endl;
-                        } else {
-                            puntosPintarBuffer = 20;
-                        }
-                        if (scanLineH < rngX[0]) rngX[0] = scanLineH;
-                        if (scanLineV < rngY[0]) rngY[0] = scanLineV;
-                        if (scanLineH > rngX[1]) rngX[1] = scanLineH;
-                        if (scanLineV > rngY[1]) rngY[1] = scanLineV;
-
-                        put_pixel32(*myDestSurface, scanLineH, scanLineV,
-                            getPixelFromOrientarion(mapSurfaces, orientacion, vMapX, vMapY, mapWidth, mapHeight));
-                        //cout << "(" << scanLineH << "," << scanLineV << ") - (" << vMapX << "," << vMapY << ")" << endl;
+                if (countTileX == 0){
+                    drawTile(currentGPSPos, zoom, 0, countTileY, numTile, pixelTile);
+                    numTilesDrawed++;
+                    if (countTileY > 0) {
+                        drawTile(currentGPSPos, zoom, 0, -1 * countTileY, numTile, pixelTile);
+                        numTilesDrawed++;
                     }
+                } else {
+                    //Pintando por arriba
+                    if (!leftLimit && !upLimit){
+                        drawTile(currentGPSPos, zoom, -1 * countTileX, -1 * countTileY, numTile, pixelTile);
+                        numTilesDrawed++;
+                    }
+
+                    if (!rightLimit && !upLimit){
+                        drawTile(currentGPSPos, zoom,      countTileX, -1 * countTileY, numTile, pixelTile);
+                        numTilesDrawed++;
+                    }
+
+                    if (countTileY > 0) {
+                        //Pintando por debajo
+                        if (!leftLimit && !downLimit){
+                            drawTile(currentGPSPos, zoom, -1 * countTileX, countTileY, numTile, pixelTile);
+                            numTilesDrawed++;
+                        }
+
+                        if (!rightLimit  && !downLimit){
+                            drawTile(currentGPSPos, zoom,      countTileX, countTileY, numTile, pixelTile);
+                            numTilesDrawed++;
+                        }
+                    }
+
                 }
+                countTileX++;
             }
-            pintado[i] = lastOrientacion;
-//            cout << lastOrientacion << ": (" << rngX[0] << "," << rngY[0] << ") - (" << rngX[1] << "," << rngY[1] << ")" << endl;
-            lastOrientacion = -1;
+            countTileY++;
         }
-
-
+        //cout << "numTilesDrawed: " << numTilesDrawed << endl;
     }
 
-/*
-    cout << "tiempo dibujado mapa: " << SDL_GetTicks() - time << "; " <<
-    pintado[0] << "," <<
-    pintado[1] << "," <<
-    pintado[2] << "," <<
-    pintado[3] <<
-    endl;
-*/
 
-    //cout << pintado[0] << "," << pintado[1] << "," << pintado[2] << "," << pintado[3] << endl;
-
-//    cout << "Liberando"<< endl;
-    //Liberamos recursos
-    if (mapSurfaces[0].tmpSurface != NULL)
-        SDL_FreeSurface(mapSurfaces[0].tmpSurface);
-    if (mapSurfaces[1].tmpSurface != NULL)
-        SDL_FreeSurface(mapSurfaces[1].tmpSurface);
-    if (mapSurfaces[2].tmpSurface != NULL)
-        SDL_FreeSurface(mapSurfaces[2].tmpSurface);
-    if (mapSurfaces[3].tmpSurface != NULL)
-        SDL_FreeSurface(mapSurfaces[3].tmpSurface);
-
-//    cout << "surfaces liberadas"<< endl;
 }
 
-/**
-*
-*/
-void Iofrontend::getPosPixelFromOrient(int orientacion, int virtualMapX, int virtualMapY,
-                                        int mapWidth, int mapHeight, t_iPos *pos){
+void Iofrontend::drawTile(VELatLong *currentLatLon, int zoom, int sideTileX, int sideTileY, Point numTile, Point pixelTile){
+    Dirutil dir;
+    ImagenGestor imgGestor;
+    UIPicture *objPict = (UIPicture *)ObjectsMenu[PANTALLAGPSINO]->getObjByName("mapBox");
+    Point newPos;
+    newPos.x = objPict->getW() / 2 - pixelTile.x;
+    newPos.y = objPict->getH() / 2 - pixelTile.y;
 
-    switch(orientacion){
-        case GmCN:
-            pos->x = virtualMapX;
-            pos->y = virtualMapY;
-            break;
-        case GmN:
-            pos->x = virtualMapX;
-            pos->y = virtualMapY + mapHeight;
-            break;
-        case GmS:
-            pos->x = virtualMapX;
-            pos->y = virtualMapY - mapHeight;
-            break;
-        case GmE:
-            pos->x = virtualMapX - mapWidth;
-            pos->y = virtualMapY;
-            break;
-        case GmW:
-            pos->x = virtualMapX + mapWidth;
-            pos->y = virtualMapY;
-            break;
-        case GmNE:
-            pos->x = virtualMapX - mapWidth;
-            pos->y = virtualMapY + mapHeight;
-            break;
-        case GmNW:
-            pos->x = virtualMapX + mapWidth;
-            pos->y = virtualMapY + mapHeight;
-            break;
-        case GmSE:
-            pos->x = virtualMapX - mapWidth;
-            pos->y = virtualMapY - mapHeight;
-            break;
-        case GmSW:
-            pos->x = virtualMapX + mapWidth;
-            pos->y = virtualMapY - mapHeight;
-            break;
-    }
-}
+    int desplazaX = mapWidth * sideTileX;
+    int desplazaY = mapHeight * sideTileY;
 
-Uint32 Iofrontend::getPixelFromOrientarion(t_mapSurface *mapSurfaces, int orientacion, int virtualMapX, int virtualMapY,
-                                        int mapWidth, int mapHeight)
-{
-    Uint32 pixel = 0xFFFFFF;
-    for (int i=0; i < 4; i++){
-        if (mapSurfaces[i].orientacion == orientacion && mapSurfaces[i].tmpSurface != NULL){
-            switch(orientacion){
-                case GmCN:
-                    pixel = get_pixel32(mapSurfaces[i].tmpSurface, virtualMapX, virtualMapY);
-                    break;
-                case GmN:
-                    pixel = get_pixel32(mapSurfaces[i].tmpSurface, virtualMapX, virtualMapY + mapHeight);
-                    break;
-                case GmS:
-                    pixel = get_pixel32(mapSurfaces[i].tmpSurface, virtualMapX, virtualMapY - mapHeight);
-                    break;
-                case GmE:
-                    pixel = get_pixel32(mapSurfaces[i].tmpSurface, virtualMapX - mapWidth, virtualMapY);
-                    break;
-                case GmW:
-                    pixel = get_pixel32(mapSurfaces[i].tmpSurface, virtualMapX + mapWidth, virtualMapY);
-                    break;
-                case GmNE:
-                    pixel = get_pixel32(mapSurfaces[i].tmpSurface, virtualMapX - mapWidth, virtualMapY + mapHeight);
-                    break;
-                case GmNW:
-                    pixel = get_pixel32(mapSurfaces[i].tmpSurface, virtualMapX + mapWidth, virtualMapY + mapHeight);
-                    break;
-                case GmSE:
-                    pixel = get_pixel32(mapSurfaces[i].tmpSurface, virtualMapX - mapWidth, virtualMapY - mapHeight);
-                    break;
-                case GmSW:
-                    pixel = get_pixel32(mapSurfaces[i].tmpSurface, virtualMapX + mapWidth, virtualMapY - mapHeight);
-                    break;
+    string imgLocation = dir.getFolder(fileGPSData) //+ FILE_SEPARATOR + "Tiles"
+                + FILE_SEPARATOR + Constant::TipoToStr(zoom)
+                + FILE_SEPARATOR + Constant::TipoToStr(numTile.x + sideTileX)
+                + FILE_SEPARATOR + Constant::TipoToStr(numTile.y + sideTileY)
+                + string(".png");
+
+    const int inicioI = (newPos.x + desplazaX < 0) ? abs(newPos.x + desplazaX) : 0;
+    const int inicioJ = (newPos.y + desplazaY < 0) ? abs(newPos.y + desplazaY) : 0;
+    const int finI = (objPict->getW() - (newPos.x + desplazaX) > mapWidth) ? mapWidth : objPict->getW() - (newPos.x + desplazaX);
+    const int finJ = (objPict->getH() - (newPos.y + desplazaY) > mapHeight) ? mapHeight : objPict->getH() - (newPos.y + desplazaY);
+
+//    if (inicioI > 0|| inicioJ > 0)
+//        cout << "inicioI: " << inicioI << " " << "inicioJ: " << inicioJ << endl;
+//    if (finI < mapWidth || finJ < mapHeight)
+//        cout << "finI: " << finI << " " << "finJ: " << finJ << endl;
+
+    if (dir.existe(imgLocation)){
+        SDL_Surface *optimizedImage;
+        imgGestor.loadImgDisplay(imgLocation.c_str(), &optimizedImage);
+
+        for (int i=inicioI; i < finI; i++){
+            for (int j=inicioJ; j < finJ; j++){
+                putpixelSafe(objPict->getImgGestor()->getSurface(), i + newPos.x + desplazaX, j + newPos.y + desplazaY,
+                             getpixel(optimizedImage, i, j));
             }
         }
+        SDL_FreeSurface(optimizedImage);
     }
-    return pixel;
-}
-
-/**
-*
-*/
-void Iofrontend::getAroundTile(int xtile, int ytile, int orientacion, t_posicion *posTile){
-    switch(orientacion){
-        case GmCN:
-            posTile->x = xtile;
-            posTile->y = ytile;
-            break;
-        case GmN:
-            posTile->x = xtile;
-            posTile->y = ytile - 1;
-            break;
-        case GmS:
-            posTile->x = xtile;
-            posTile->y = ytile + 1;
-            break;
-        case GmE:
-            posTile->x = xtile + 1;
-            posTile->y = ytile;
-            break;
-        case GmW:
-            posTile->x = xtile - 1;
-            posTile->y = ytile;
-            break;
-        case GmNW:
-            posTile->x = xtile - 1;
-            posTile->y = ytile - 1;
-            break;
-        case GmNE:
-            posTile->x = xtile + 1;
-            posTile->y = ytile - 1;
-            break;
-        case GmSW:
-            posTile->x = xtile - 1;
-            posTile->y = ytile + 1;
-            break;
-        case GmSE:
-            posTile->x = xtile + 1;
-            posTile->y = ytile + 1;
-            break;
-        default:
-            break;
-    }
-}
-
-int Iofrontend::getDrawableMapOrientation(int virtualMapX, int virtualMapY, int mapWidth, int mapHeight){
-    int orientacion = -1;
-
-    //Parte central
-    if (virtualMapX >= 0 && virtualMapX < mapWidth
-        && virtualMapY >= 0 && virtualMapY < mapHeight){
-        orientacion = GmCN;
-    //Parte superior
-    } else if (virtualMapX >= 0 && virtualMapX < mapWidth
-               && virtualMapY <= 0){
-        orientacion = GmN;
-    //Parte inferior
-    } else if (virtualMapX >= 0 && virtualMapX < mapWidth
-               && virtualMapY >= mapHeight){
-        orientacion = GmS;
-    //parte izquierda
-    } else if (virtualMapX <= 0
-               && virtualMapY >= 0 && virtualMapY < mapHeight){
-        orientacion = GmW;
-    //Parte Derecha
-    } else if (virtualMapX >= mapWidth &&
-               virtualMapY >= 0 && virtualMapY < mapHeight){
-        orientacion = GmE;
-    //Parte superior Izquierda
-    } else if (virtualMapX <= 0
-               && virtualMapY <= 0){
-        orientacion = GmNW;
-    //Parte Superior derecha
-    } else if (virtualMapX >= mapWidth &&
-               virtualMapY <= 0){
-        orientacion = GmNE;
-    //parte inferior izquierda
-    } else if (virtualMapX <= 0
-               && virtualMapY >= 0 && virtualMapY > mapHeight){
-        orientacion = GmSW;
-    //Parte Inferior Derecha
-    } else if (virtualMapX >= mapWidth &&
-               virtualMapY >= 0 && virtualMapY >= mapHeight){
-        orientacion = GmSE;
-    }
-    return orientacion;
-}
-
-
-Uint32 Iofrontend::get_pixel32( SDL_Surface *surface, int x, int y )
-{
-    //Convert the pixels to 32 bit
-    Uint32 *pixels = (Uint32 *)surface->pixels;
-
-    //Get the requested pixel
-    return pixels[ ( y * surface->w ) + x ];
-}
-
-void Iofrontend::put_pixel32( SDL_Surface *surface, int x, int y, Uint32 pixel )
-{
-    //Convert the pixels to 32 bit
-    Uint32 *pixels = (Uint32 *)surface->pixels;
-
-    //Set the pixel
-    pixels[ ( y * surface->w ) + x ] = pixel;
-
-    //int bpp = surface->format->BytesPerPixel;
-    /* Here p is the address to the pixel we want to set */
-    /*
-    Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * surface->format->BytesPerPixel;
-
-    switch(surface->format->BytesPerPixel) {
-    case 1:
-        *p = pixel;
-        break;
-
-    case 2:
-        *(Uint16 *)p = pixel;
-        break;
-
-    case 3:
-        if(SDL_BYTEORDER == SDL_BIG_ENDIAN) {
-            p[0] = (pixel >> 16) & 0xff;
-            p[1] = (pixel >> 8) & 0xff;
-            p[2] = pixel & 0xff;
-        } else {
-            p[0] = pixel & 0xff;
-            p[1] = (pixel >> 8) & 0xff;
-            p[2] = (pixel >> 16) & 0xff;
-        }
-        break;
-
-    case 4:
-        *(Uint32 *)p = pixel;
-        break;
-    }
-    */
 }
 
 /**

@@ -19,8 +19,7 @@ class MercatorProjection
         void GetBounds(VELatLong center, int zoom, int mapWidth, int mapHeight,
                                      VELatLong * NELatLon, VELatLong *SWLatLon);
 
-        void getPosPixelTile(VELatLong *NWLatLon, VELatLong *currentLatLon, int zoom, int mapWidth, int mapHeight,
-                                     Point *MapXY);
+        void getPosPixelTile(VELatLong *currentLatLon, int zoom, Point *MapXY, Point *numTile);
 
     protected:
 
