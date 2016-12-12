@@ -112,6 +112,7 @@ void IcoGestor::cargarIconos(){
     cargarIcono("drive_disk.png");
     cargarIcono("drive_network.png");
     cargarIcono("map_go.png");
+    cargarIcono("trackSeg.png");
 
 
 }

@@ -5,10 +5,10 @@
 
 
 const int SURFACE_MODE = SDL_SWSURFACE;
-//static const int gpsinoW = 800;
-//static const int gpsinoH = 600;
-static const int gpsinoW = 128;
-static const int gpsinoH = 160;
+//static const int gpsinoW = 1920;
+//static const int gpsinoH = 850;
+static const int gpsinoW = 160;
+static const int gpsinoH = 128;
 static const int mapWidth = 256;
 static const int mapHeight = 256;
 static int limitW = 0;
@@ -46,8 +46,6 @@ Iofrontend::Iofrontend(){
     listaPixels = NULL;
     myGPSSurface = NULL;
     fileGPX = "";
-
-
     setSelMenu(PANTALLAGPSINO);
     tEvento evento;
     drawMenu(evento);
@@ -202,7 +200,9 @@ int Iofrontend::casoDEFAULT(tEvento evento){
     bool salir = procesarControles(objMenu, &evento, NULL);
 
     if (getSelMenu() == PANTALLAGPSINO){
-        drawMapArduino(&evento);
+//        if (evento.isKey && (evento.key == SDLK_a || evento.key == SDLK_d || evento.key == SDLK_s) ) {
+            drawMapArduino(&evento);
+//        }
     }
 
     return salir;
@@ -1515,10 +1515,8 @@ void Iofrontend::drawMapArduino(tEvento *evento){
         }
 
         UIPicture *objPict = (UIPicture *)ObjectsMenu[PANTALLAGPSINO]->getObjByName("mapBox");
-
-        //SDL_FillRect(objPict->getImgGestor()->getSurface(), NULL, 0xFFFFFFFF);
-
         //Acciones del teclado
+
         if (evento != NULL){
             if (evento->isKey && evento->key == SDLK_a){
                 geoDrawer->incZoomLevel();
@@ -1563,14 +1561,6 @@ void Iofrontend::drawMapArduino(tEvento *evento){
         }
     //    drawText(Constant::TipoToStr(posTempArray).c_str(), 20, 20, cNegro);
         calcularPixels(&lastGPSPos, &currentGPSPos, &latestCoord, &actualCoord);
-
-//        if (posTempArray == 0){
-//            pintarCapaTerreno(&currentGPSPos);
-//        }
-//        else {
-//            pintarCapaTerreno(&currentGPSPos);
-//        }
-
         pintarCapaTerreno(&currentGPSPos);
 
         int nCampos = 0;
@@ -1598,9 +1588,11 @@ void Iofrontend::drawMapArduino(tEvento *evento){
                     * al simplificar puntos, estos queden fuera de la pantalla, pero su vector si que puede pasar
                     * por pantalla.
                     * TODO: Posibilidad de calcular si quedan fuera de pantalla*/
-//                    pintarLinea(posXY.x, posXY.y, posXY2.x, posXY2.y, puntos < lastPointVisited ? cRojo : cNegro);
+//                    pintarPointLinea(posXY.x, posXY.y, posXY2.x, posXY2.y, puntos < lastPointVisited ? cRojo : cNegro,
+//                                     objPict->getImgGestor()->getSurface());
                     plotLineWidth(posXY.x, posXY.y, posXY2.x, posXY2.y, 0 ,puntos < lastPointVisited ? cRojo : cNegro,
                                   objPict->getImgGestor()->getSurface());
+
                     //cout << dataFromFile.point.x << ":" << dataFromFile.point.y << " .... " << posXY.x << "," << posXY.y << " - " << posXY2.x << "," << posXY2.y << endl;
                     //Dibujamos el texto del waypoint. Tambien dibujamos siempre un punto indicando su localizacion
                     if (!lastDataFromFile.name.empty()){
@@ -1689,6 +1681,83 @@ void Iofrontend::drawMapArduino(tEvento *evento){
 
         latestMinDist = minDist;
         lastPointVisited = latestPixelToDist;
+    }
+}
+
+/**
+*
+*/
+void Iofrontend::pintarPointLinea (int x1, int y1, int x2, int y2 , t_color color, SDL_Surface *surface)
+{
+    if (x1 >= 0 && y1 < this->getWidth()-1 && x2 >= 0 && y2 < this->getHeight()-1){
+        int tempInt = 0;
+        int i = x1;
+        int j = y1;
+        int tempj = 0;
+        int numerador = (y1-y2);
+        int denominador = (x1-x2);
+        float pendiente = 0;
+        int dif = 0;
+        int contj = 0;
+        int conti = 0;
+        int difx = (x2 > x1) ? x2-x1+1 : x1-x2+1;
+        int dify = (y2 > y1) ? y2-y1+1 : y1-y2+1;
+
+        if (denominador != 0){
+            pendiente = numerador/(float)denominador;
+            while (conti < difx && conti < screen->w){
+                //Funcion de la recta -> j = (y1-y2)/(x1-x2) * (i-x1) + y1
+                j = (int)(pendiente * (i-x1)) + y1;
+                tempj = (int)(pendiente * (i+1-x1)) + y1;
+                dif = (j > tempj) ? j-tempj : tempj-j;
+
+                if (dif > 1){
+                    contj = 0;
+                    while (contj < dif && (conti+1)*dif < dify){
+                        putpixelSafe(screen, i, (j > tempj) ? j-contj : j + contj, SDL_MapRGB(screen->format, color.r, color.g, color.b));
+                        //gestorIconos->drawIcono(trackSeg, surface, i, (j > tempj) ? j-contj : j + contj);
+                        contj++;
+                    }
+                } else {
+                    putpixelSafe(screen,i,j,SDL_MapRGB(screen->format, color.r, color.g, color.b));
+                    //gestorIconos->drawIcono(trackSeg, surface, i, j);
+                }
+
+
+                if ((pendiente > 0. && denominador < 0.) ||
+                    (pendiente < 0. && denominador < 0.) ||
+                    (pendiente == 0 && denominador < 0.)){
+                        i++;
+                } else if((pendiente < 0. && denominador > 0.) ||
+                        (pendiente > 0. && denominador > 0.) ||
+                        (pendiente == 0 && denominador > 0.)) {
+                        i--;
+                }
+
+                conti++;
+            }
+        } else {
+            //    //Comprobamos que el x1 sea siempre el menor punto
+            if (x1 > x2) {
+                tempInt = x1;
+                x1 = x2;
+                x2 = tempInt;
+            }
+
+            if (y1 > y2) {
+                tempInt = y1;
+                y1 = y2;
+                y2 = tempInt;
+            }
+            i = x1;
+            j = y1;
+
+            while (j <= y2 && j < screen->h){
+                putpixelSafe(screen,i,j,SDL_MapRGB(screen->format, color.r, color.g, color.b));
+//                gestorIconos->drawIcono(trackSeg, surface, i, j);
+                j++;
+            }
+        }
     }
 }
 
@@ -1887,12 +1956,9 @@ void Iofrontend::generarFicheroRuta(string fileOri, string fileDest, int zoomMet
         //que unen cada punto
         geoDrawerAngulos->calcLimites(posiciones);
         //Se intenta hacer un zoom APROXIMADO en metros que abarque toda la pantalla
-
         geoDrawer->doGoogleZoom(zoomMeters);
         geoDrawerPos->doGoogleZoom(zoomMeters);
         geoDrawerAngulos->doGoogleZoom(googleZoom[0]);
-
-
         //Obtenemos la primera posicion de la ruta y centramos en pantalla
         std::vector<std::string> strSplitted;
         strSplitted = Constant::split(posiciones->at(0),",");
@@ -2321,9 +2387,9 @@ void Iofrontend::pintarCapaTerreno(VELatLong *currentGPSPos){
         }
         //cout << "numTilesDrawed: " << numTilesDrawed << endl;
     }
-
-
 }
+
+
 
 void Iofrontend::drawTile(VELatLong *currentLatLon, int zoom, int sideTileX, int sideTileY, Point numTile, Point pixelTile){
     Dirutil dir;
@@ -2352,7 +2418,7 @@ void Iofrontend::drawTile(VELatLong *currentLatLon, int zoom, int sideTileX, int
 //    if (finI < mapWidth || finJ < mapHeight)
 //        cout << "finI: " << finI << " " << "finJ: " << finJ << endl;
 
-    if (dir.existe(imgLocation)){
+    if (dir.existe(imgLocation) && finI > inicioI && finJ > inicioJ){
         SDL_Surface *optimizedImage;
         imgGestor.loadImgDisplay(imgLocation.c_str(), &optimizedImage);
 
@@ -2650,41 +2716,32 @@ void Iofrontend::plotLineWidth(int x0, int y0, int x1, int y1, int wd, t_color c
    int err = dx-dy, e2, x2, y2;                          /* error value e_xy */
    float ed = dx+dy == 0 ? 1 : sqrt((float)dx*dx+(float)dy*dy);
 
-   uint32_t pixColor = SDL_MapRGB(surface->format, color.r, color.g, color.b);
-   uint32_t maximo = pixColor;
+//   uint32_t pixColor = SDL_MapRGB(surface->format, color.r, color.g, color.b);
 
+    for (wd = (wd+1)/2; ; ) {  /* pixel loop */
+        //putpixelSafe(surface,x0, y0, pixColor);
+        gestorIconos->drawIcono(trackSeg, surface, x0, y0);
+        e2 = err; x2 = x0;
+        if (2*e2 >= -dx) {                                           /* x step */
+             for (e2 += dy, y2 = y0; e2 < ed*wd && (y1 != y2 || dx > dy); e2 += dx){
+            //            putpixelSafe(surface,x0, y2 += sy, pixColor );
+                gestorIconos->drawIcono(trackSeg, surface, x0, y2 += sy);
+             }
 
+            if (x0 == x1) break;
+            e2 = err; err -= dy; x0 += sx;
+        }
 
-   for (wd = (wd+1)/2; ; ) {                                   /* pixel loop */
-//        putpixelSafe(screen,x0, y0, antialiasline((abs(err-dx+dy)/ed-wd+1), color));
-        putpixelSafe(surface,x0, y0, pixColor);
-        //setPixelAA(x0,y0,max(0,(int)(255*(abs(err-dx+dy)/ed-wd+1))));
-        //setPixel(x0,y0);
-      e2 = err; x2 = x0;
-      if (2*e2 >= -dx) {                                           /* x step */
+        if (2*e2 <= dy) {                                            /* y step */
+             for (e2 = dx-e2; e2 < ed*wd && (x1 != x2 || dx < dy); e2 += dy){
+            //            putpixelSafe(surface,x2 += sx, y0, pixColor );
+                gestorIconos->drawIcono(trackSeg, surface, x2 += sx, y0);
+             }
 
-         for (e2 += dy, y2 = y0; e2 < ed*wd && (y1 != y2 || dx > dy); e2 += dx){
-//            putpixelSafe(screen,x0, y2 += sy, antialiasline((abs(e2)/ed-wd+1), color));
-            putpixelSafe(surface,x0, y2 += sy, pixColor );
-            //setPixelAA(x0, y2 += sy, max(0,(int)(255*(abs(e2)/ed-wd+1))));
-            //setPixelAA(x0, y2 += sy, max(0,(int)(255*(abs(e2)/ed-wd+1))));
-         }
-
-         if (x0 == x1) break;
-         e2 = err; err -= dy; x0 += sx;
-      }
-      if (2*e2 <= dy) {                                            /* y step */
-         for (e2 = dx-e2; e2 < ed*wd && (x1 != x2 || dx < dy); e2 += dy){
-//            putpixelSafe(screen,x2 += sx, y0, antialiasline((abs(e2)/ed-wd+1), color));
-            putpixelSafe(surface,x2 += sx, y0, pixColor );
-            //setPixelAA(x2 += sx, y0, max(0,(int)(255*(abs(e2)/ed-wd+1))));
-
-         }
-
-         if (y0 == y1) break;
-         err += dx; y0 += sy;
-      }
-   }
+            if (y0 == y1) break;
+            err += dx; y0 += sy;
+        }
+    }
 }
 
 /**

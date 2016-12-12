@@ -114,6 +114,7 @@ class Iofrontend : public Ioutil{
         void loadComboUnidades(string objName, int pantalla,  int types);
 
         void drawTile(VELatLong *currentLatLon, int zoom, int sideTileX, int sideTileY, Point numTile, Point pixelTile);
+        void pintarPointLinea (int x1, int y1, int x2, int y2 , t_color color, SDL_Surface *surface);
 
         void leerLineaFicheroRuta(char *text, int numLinea, int *numCampo, PosMapa *data);
         int getPosY(int altura, int graphW, int graphH);
