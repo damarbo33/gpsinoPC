@@ -70,6 +70,17 @@ class Iofrontend : public Ioutil{
             bool execFunctions;
         };
 
+        struct MapUtilPoint{
+            int posTempArray;
+            Point latestCoord;
+            Point actualCoord;
+            VELatLong lastGPSPos;
+            VELatLong currentGPSPos;
+            int latestPixelToDist; //Para no ir hacia puntos ya recorridos que hagan que calculemos mal la distancia al
+                                              //siguiente valle o cumbre
+            int lastPointVisited;  //para saber cual fue el pubto
+        } mapUtilPoint;
+
         GeoDrawer *geoDrawer;
         string fileGPSData;
         string fileGPX;

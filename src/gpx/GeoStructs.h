@@ -99,6 +99,11 @@ class VELatLong {
             this->longitude = longitude;
         }
 
+        void reset(){
+            latitude = 0.0;
+            longitude = 0.0;
+        }
+
         /**
          * @return the latitude
          */
@@ -141,6 +146,9 @@ class Point{
         Point(double x, double y){
             this->x = x;
             this->y = y;
+        }
+        void reset(){
+            x=0; y=0;
         }
 };
 

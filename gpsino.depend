@@ -3174,7 +3174,7 @@
 	"common/Ioutil.h"
 	"Iofrontend.h"
 
-1481539109 c:\github\proyectos\gpsinopc\src\iofrontend.h
+1481627863 c:\github\proyectos\gpsinopc\src\iofrontend.h
 	<string>
 	<vector>
 	"common/Ioutil.h"
@@ -3214,13 +3214,13 @@
 1470830347 source:c:\github\proyectos\gpsinopc\src\scrapper\scrapper.cpp
 	"scrapper.h"
 
-1481540772 source:c:\github\proyectos\gpsinopc\src\iofrontend.cpp
+1481628179 source:c:\github\proyectos\gpsinopc\src\iofrontend.cpp
 	"Iofrontend.h"
 	"uilistgroup.h"
 	"beans/listgroupcol.h"
 	"uilistcommon.h"
 
-1469689436 c:\github\proyectos\gpsinopc\src\gpx\geostructs.h
+1481623492 c:\github\proyectos\gpsinopc\src\gpx\geostructs.h
 	<string>
 	<Constant.h>
 	<math.h>
@@ -3275,7 +3275,7 @@
 1470825518 source:c:\github\proyectos\bmprle\image565.cpp
 	"image565.h"
 
-1470044224 c:\github\proyectos\bmprle\image565.h
+1481553908 c:\github\proyectos\bmprle\image565.h
 	<stdio.h>
 	<stdlib.h>
 	<string.h>

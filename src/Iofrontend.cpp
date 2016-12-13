@@ -5,10 +5,10 @@
 
 
 const int SURFACE_MODE = SDL_SWSURFACE;
-//static const int gpsinoW = 1920;
-//static const int gpsinoH = 850;
-static const int gpsinoW = 160;
-static const int gpsinoH = 128;
+static const int gpsinoW = 640;
+static const int gpsinoH = 350;
+//static const int gpsinoW = 160;
+//static const int gpsinoH = 128;
 static const int mapWidth = 256;
 static const int mapHeight = 256;
 static int limitW = 0;
@@ -1355,6 +1355,12 @@ void Iofrontend::analyzeGpx(string ruta){
     cargarFicheroRuta(fileNameSimple, geoDrawer->getZoomMeters());
     Traza::print("Iofrontend::analyzeGpx. Cargando estadisticas", W_INFO);
     geoDrawer->logEstadisticasRuta();
+
+    mapUtilPoint.posTempArray = 0;
+    mapUtilPoint.latestCoord.reset();
+    mapUtilPoint.actualCoord.reset();
+    mapUtilPoint.latestPixelToDist = 0;
+    mapUtilPoint.lastPointVisited = 0;
 }
 
 /**
@@ -1414,7 +1420,7 @@ int Iofrontend::leerCamposDat(FILE *fp, PosMapa *dataFromFile){
 //        cout << "buffPos: " << buffPos << " tmpLine: " << tmpLine << endl;
         if (buffPos == maxLine || buffPos == 0){
             n = fread(tmpLine, 1, maxLine, fp);
-            endOfFile = (n == 0);
+            endOfFile = (n < maxLine);
         }
 //        cout << "leido tmpLine: " << tmpLine << endl;
         //Se leen los datos mediante un buffer para aumentar rendimiento
@@ -1442,7 +1448,7 @@ int Iofrontend::leerCamposDat(FILE *fp, PosMapa *dataFromFile){
 
                     nLine++;
                     nCampo = 0;
-                    //cout << "newLine!! " << nLine << " n: " << n << " lineLen: " << lineLen  << endl;
+//                    cout << "newLine!! " << nLine << " n: " << n << " lineLen: " << lineLen  << endl;
                     /**
                       * Debemos abandonar el bucle para que se pueda procesar los datos de la linea
                       * correspondiente
@@ -1474,15 +1480,6 @@ void Iofrontend::drawMapArduino(tEvento *evento){
     //100 bytes de limite
     char line[maxLine];
     FILE *fp;
-    static int posTempArray = 0;
-    static Point latestCoord;
-    static Point actualCoord;
-    static VELatLong lastGPSPos;
-    static VELatLong currentGPSPos;
-    static int latestPixelToDist = 0; //Para no ir hacia puntos ya recorridos que hagan que calculemos mal la distancia al
-                                      //siguiente valle o cumbre
-    static int lastPointVisited = 0;  //para saber cual fue el pubto
-
     Dirutil dir;
     string processedFile = dir.getFolder(fileGPSData) + FILE_SEPARATOR
                             + dir.getFileNameNoExt(fileGPSData) + "_" + Constant::TipoToStr(geoDrawer->getZoomMeters()) +  "_px.dat";
@@ -1506,12 +1503,14 @@ void Iofrontend::drawMapArduino(tEvento *evento){
 
         // ** Cargamos de la lista la posicion gps actual y centramos la pantalla
         //  * Esto se tiene que sustituir por la posicion obtenida por el modulo gps para saber la pos actual
-        if (posTempArray == 0){
+        if (mapUtilPoint.posTempArray == 0){
             //currentGPSPos.setLatitude(40.453494);
             //currentGPSPos.setLongitude(-1.291035);
-            std::vector<std::string> strSplitted = Constant::split(posiciones->at(posTempArray),",");
-            currentGPSPos.setLatitude(geoDrawer->todouble(strSplitted.at(0)));
-            currentGPSPos.setLongitude(geoDrawer->todouble(strSplitted.at(1)));
+            std::vector<std::string> strSplitted = Constant::split(posiciones->at(mapUtilPoint.posTempArray),",");
+            mapUtilPoint.currentGPSPos.setLatitude(geoDrawer->todouble(strSplitted.at(0)));
+            mapUtilPoint.currentGPSPos.setLongitude(geoDrawer->todouble(strSplitted.at(1)));
+            mapUtilPoint.lastGPSPos.setLatitude(geoDrawer->todouble(strSplitted.at(0)));
+            mapUtilPoint.lastGPSPos.setLongitude(geoDrawer->todouble(strSplitted.at(1)));
         }
 
         UIPicture *objPict = (UIPicture *)ObjectsMenu[PANTALLAGPSINO]->getObjByName("mapBox");
@@ -1529,39 +1528,38 @@ void Iofrontend::drawMapArduino(tEvento *evento){
 
             } else if (evento->isKey && (evento->key == SDLK_d || evento->key == SDLK_s)) {
                 //Evitamos overflow si sobrepasamos el tamanyo del track
-                lastGPSPos = currentGPSPos;
-                posTempArray = posTempArray % (posiciones->size() - 1);
+                mapUtilPoint.lastGPSPos = mapUtilPoint.currentGPSPos;
+                mapUtilPoint.posTempArray = mapUtilPoint.posTempArray % (posiciones->size() - 1);
                 //Para ir en sentido contrario
 
                 if (evento->key == SDLK_s){
-                    if (posTempArray > 0){
-                        posTempArray--;
+                    if (mapUtilPoint.posTempArray > 0){
+                        mapUtilPoint.posTempArray--;
                     } else {
-                        posTempArray = posiciones->size() - 1;
+                        mapUtilPoint.posTempArray = posiciones->size() - 1;
                     }
                 }
 
-                if (posTempArray == 0){
-                    latestPixelToDist = 0;
+                if (mapUtilPoint.posTempArray == 0){
+                    mapUtilPoint.latestPixelToDist = 0;
                 }
 
                 //** Cargamos de la lista la posicion gps actual y centramos la pantalla
                 //* Esto se tiene que sustituir por la posicion obtenida por el modulo gps para saber la pos actual
-                if (posiciones->size() > posTempArray){
-                    std::vector<std::string> strSplitted = Constant::split(posiciones->at(posTempArray),",");
-                    currentGPSPos.setLatitude(geoDrawer->todouble(strSplitted.at(0)));
-                    currentGPSPos.setLongitude(geoDrawer->todouble(strSplitted.at(1)));
-                    //pintarCapaTerreno(&currentGPSPos);
+                if (posiciones->size() > mapUtilPoint.posTempArray){
+                    std::vector<std::string> strSplitted = Constant::split(posiciones->at(mapUtilPoint.posTempArray),",");
+                    mapUtilPoint.currentGPSPos.setLatitude(geoDrawer->todouble(strSplitted.at(0)));
+                    mapUtilPoint.currentGPSPos.setLongitude(geoDrawer->todouble(strSplitted.at(1)));
                 }
 
                 if (evento->key == SDLK_d){
-                    posTempArray++;
+                    mapUtilPoint.posTempArray++;
                 }
             }
         }
     //    drawText(Constant::TipoToStr(posTempArray).c_str(), 20, 20, cNegro);
-        calcularPixels(&lastGPSPos, &currentGPSPos, &latestCoord, &actualCoord);
-        pintarCapaTerreno(&currentGPSPos);
+        calcularPixels(&mapUtilPoint.lastGPSPos, &mapUtilPoint.currentGPSPos, &mapUtilPoint.latestCoord, &mapUtilPoint.actualCoord);
+        pintarCapaTerreno(&mapUtilPoint.currentGPSPos);
 
         int nCampos = 0;
         PosMapa dataFromFile;
@@ -1590,14 +1588,22 @@ void Iofrontend::drawMapArduino(tEvento *evento){
                     * TODO: Posibilidad de calcular si quedan fuera de pantalla*/
 //                    pintarPointLinea(posXY.x, posXY.y, posXY2.x, posXY2.y, puntos < lastPointVisited ? cRojo : cNegro,
 //                                     objPict->getImgGestor()->getSurface());
-                    plotLineWidth(posXY.x, posXY.y, posXY2.x, posXY2.y, 0 ,puntos < lastPointVisited ? cRojo : cNegro,
+                    plotLineWidth(posXY.x, posXY.y, posXY2.x, posXY2.y, 0 ,puntos < mapUtilPoint.lastPointVisited ? cRojo : cNegro,
                                   objPict->getImgGestor()->getSurface());
 
-                    //cout << dataFromFile.point.x << ":" << dataFromFile.point.y << " .... " << posXY.x << "," << posXY.y << " - " << posXY2.x << "," << posXY2.y << endl;
+
+                    int dist = sqrt(pow(posXY.x - posXY2.x,2) + pow(posXY.y - posXY2.y,2));
+                    if (dist > 30){
+                        cout << "puntos: "<< puntos << " -> "
+                            << dataFromFile.point.x << ":" << dataFromFile.point.y << " .... "
+                            << posXY.x  << "," << posXY.y  << " - "
+                            << posXY2.x << "," << posXY2.y << endl;
+                    }
+
                     //Dibujamos el texto del waypoint. Tambien dibujamos siempre un punto indicando su localizacion
                     if (!lastDataFromFile.name.empty()){
-                        if (drawWaypoints && posXY.x <= actualCoord.x + maxDistPxWaypoint && posXY.x >= actualCoord.x - maxDistPxWaypoint
-                            && posXY.y <= actualCoord.y + maxDistPxWaypoint && posXY.y >= actualCoord.y - maxDistPxWaypoint){
+                        if (drawWaypoints && posXY.x <= mapUtilPoint.actualCoord.x + maxDistPxWaypoint && posXY.x >= mapUtilPoint.actualCoord.x - maxDistPxWaypoint
+                            && posXY.y <= mapUtilPoint.actualCoord.y + maxDistPxWaypoint && posXY.y >= mapUtilPoint.actualCoord.y - maxDistPxWaypoint){
                             hasWaypoint = true;
                             waypointText = lastDataFromFile.name;
                         }
@@ -1611,25 +1617,25 @@ void Iofrontend::drawMapArduino(tEvento *evento){
 
                     //Calculamos el modulo del vector para saber cual es el que tiene menor distancia con la pos actual
                     //Esto se deberia calcular segun la lat y lon
-                    tempDist = sqrt(pow(posXY.x - actualCoord.x, 2) + pow(posXY.y - actualCoord.y, 2));
+                    tempDist = sqrt(pow(posXY.x - mapUtilPoint.actualCoord.x, 2) + pow(posXY.y - mapUtilPoint.actualCoord.y, 2));
 
                     //Workaround para mostrar bien los datos de distancia hasta cumbre
-                    if (tempDist < latestMinDist && puntos < latestPixelToDist && latestPixelToDist > 0){
-                        latestPixelToDist = puntos;
+                    if (tempDist < latestMinDist && puntos < mapUtilPoint.latestPixelToDist && mapUtilPoint.latestPixelToDist > 0){
+                        mapUtilPoint.latestPixelToDist = puntos;
                     }
 
                     //Comprobamos si este es el punto del mapa mas cercano al actual
-                    if (tempDist < minDist && puntos >= latestPixelToDist){
+                    if (tempDist < minDist && puntos >= mapUtilPoint.latestPixelToDist){
                         minDist = tempDist;
                         distFromStart = lastDataFromFile.distancia;
                         eleActual = lastDataFromFile.ele;
-                        latestPixelToDist = puntos;
+                        mapUtilPoint.latestPixelToDist = puntos;
                         foundDist = true;
                     }
 
                     //Se calcula la pendiente de los proximos 100 metros
                     //if (foundDist && !foundPendiente){
-                    if (puntos >= lastPointVisited ){
+                    if (puntos >= mapUtilPoint.lastPointVisited ){
                         double difDist = lastDataFromFile.distancia - distFromStart;
                         int difAltura = lastDataFromFile.ele - eleActual;
                         if (difDist >= 100.0 && difDist > 1.0 && !foundPendiente){
@@ -1650,8 +1656,8 @@ void Iofrontend::drawMapArduino(tEvento *evento){
             } else if (puntos == LINEGPXCONFIG){
     //                cout << "LINEGPXCONFIG" << endl;
                 //Despues de que se haya leido la linea de inicializacion, calculamos datos de pixels
-                calcularPixels(&lastGPSPos, &currentGPSPos,
-                               &latestCoord, &actualCoord);
+                calcularPixels(&mapUtilPoint.lastGPSPos, &mapUtilPoint.currentGPSPos,
+                               &mapUtilPoint.latestCoord, &mapUtilPoint.actualCoord);
 
             } else if (puntos == LINEGPXSTATS){
     //                cout << "LINEGPXSTATS" << endl;
@@ -1673,14 +1679,14 @@ void Iofrontend::drawMapArduino(tEvento *evento){
         SDL_Rect orig = {0,0,objPict->getW(), objPict->getH()};
         SDL_BlitSurface(objPict->getImgGestor()->getSurface(), &orig, screen, &dest);
 
-        Point actualCoordRelativeToImg = actualCoord;
+        Point actualCoordRelativeToImg = mapUtilPoint.actualCoord;
         actualCoordRelativeToImg.x += objPict->getX();
         actualCoordRelativeToImg.y += objPict->getY();
-        pintarFlechaGPS(&actualCoordRelativeToImg, geoDrawer->calculaAnguloDireccion(&latestCoord, &actualCoord));
+        pintarFlechaGPS(&actualCoordRelativeToImg, geoDrawer->calculaAnguloDireccion(&mapUtilPoint.latestCoord, &mapUtilPoint.actualCoord));
         //mostrarDatosRuta(pendiente, distFromStart, eleActual, waypointText.c_str());
 
         latestMinDist = minDist;
-        lastPointVisited = latestPixelToDist;
+        mapUtilPoint.lastPointVisited = mapUtilPoint.latestPixelToDist;
     }
 }
 
@@ -1931,9 +1937,10 @@ void Iofrontend::generarFicheroRuta(string fileOri, string fileDest, int zoomMet
     posiciones = new std::vector<std::string>();
     loadFromFileToVector(fileOri, posiciones);
 
-    UIPicture *objPict = (UIPicture *)ObjectsMenu[PANTALLAGPSINO]->getObjByName("mapBox");
     double latitud = 0.0;
     double longitud = 0.0;
+
+    UIPicture *objPict = (UIPicture *)ObjectsMenu[PANTALLAGPSINO]->getObjByName("mapBox");
 	GeoDrawer *geoDrawerPos = new GeoDrawer(objPict->getW(), objPict->getH());
     GeoDrawer *geoDrawerAngulos = new GeoDrawer(objPict->getW(), objPict->getH());
 
@@ -1967,7 +1974,6 @@ void Iofrontend::generarFicheroRuta(string fileOri, string fileDest, int zoomMet
 
         geoDrawerPos->setPosicionCursor(latitud,longitud);
         geoDrawerPos->centerScreen();
-
         geoDrawer->setPosicionCursor(latitud,longitud);
         geoDrawer->centerScreen();
 
@@ -2070,6 +2076,7 @@ void Iofrontend::generarFicheroRuta(string fileOri, string fileDest, int zoomMet
             }
         }
         myfile.close();
+//        myfileBin.close();
     }
 
     delete geoDrawerAngulos;
@@ -2390,7 +2397,9 @@ void Iofrontend::pintarCapaTerreno(VELatLong *currentGPSPos){
 }
 
 
-
+/**
+* draw a tile relative to from a central point and
+*/
 void Iofrontend::drawTile(VELatLong *currentLatLon, int zoom, int sideTileX, int sideTileY, Point numTile, Point pixelTile){
     Dirutil dir;
     ImagenGestor imgGestor;
