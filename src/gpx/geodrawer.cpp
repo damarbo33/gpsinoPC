@@ -179,6 +179,8 @@ void GeoDrawer::calcularEstadisticasRuta(double lat, double lon, double alt, lon
     //desnivel del 100% (casi imposible normalmente)
     pendiente = distanciaPuntos != 0.0 ? diferenciaAlt * 100 / distanciaPuntos : 100;
 
+    bool endRoutePoint = stats->numCoordRuta == stats->maxCoordRuta - 1;
+
     if (stats->numCoordRuta <= 1){
         stats->init(lat, lon, alt);
         this->resetStats(lat, lon, alt);
@@ -206,8 +208,18 @@ void GeoDrawer::calcularEstadisticasRuta(double lat, double lon, double alt, lon
             bool processDiff = fabs(alt - stats->alturaValle) > minDiffAltToCumbres
                             || fabs(alt - stats->alturaCumbre) > minDiffAltToCumbres;
 
+            if (endRoutePoint && listaCumbresYValles.size() > 0){
+                CumbreValle tmpTopo = listaCumbresYValles.at(listaCumbresYValles.size() - 1);
+                CumbreValle topografia;
+                topografia.geoPos.setLatitude(lat);
+                topografia.geoPos.setLongitude(lon);
+                topografia.ele =  alt > tmpTopo.ele ? stats->altitudCumbre : stats->altitudValle;
+                topografia.tipo = alt > tmpTopo.ele ? CUMBRE : VALLE;
+                topografia.dist = alt > tmpTopo.ele ? stats->distCumbre : stats->distValle;
+                listaCumbresYValles.push_back(topografia);
+
             //Calculos de cumbres y valles de la ruta
-            if (alt > stats->alturaCumbre * (double)(1.0 + margenPendiente) && processDiff){
+            } else if ( alt > stats->alturaCumbre * (double)(1.0 + margenPendiente) && processDiff ){
                 //Estamos subiendo
                 stats->alturaCumbre = alt;
                 stats->alturaValle = alt;

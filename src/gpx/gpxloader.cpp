@@ -173,7 +173,6 @@ void GpxLoader::findWaypoints(){
 string GpxLoader::SaveToFile(string filename){
     Dirutil dir;
 
-
     string newDir = dir.getFolder(filename) + FILE_SEPARATOR + dir.getFileNameNoExt(filename);
     string processedFile = newDir + FILE_SEPARATOR + dir.getFileNameNoExt(filename) + ".dat";
 
