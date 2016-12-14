@@ -112,7 +112,7 @@ void Iofrontend::initUIObjs(){
                         ,Constant::TipoToStr(googleZoom[i]), false)->setEnabled(true);
 
         ObjectsMenu[PANTALLAGPSINO]->getObjByName(checkName)->setTextColor(cBlanco);
-        if (i==0)
+        if (i== 0)
         ObjectsMenu[PANTALLAGPSINO]->getObjByName(checkName)->setChecked(true);
     }
 
@@ -1592,13 +1592,13 @@ void Iofrontend::drawMapArduino(tEvento *evento){
                                   objPict->getImgGestor()->getSurface());
 
 
-                    int dist = sqrt(pow(posXY.x - posXY2.x,2) + pow(posXY.y - posXY2.y,2));
-                    if (dist > 30){
-                        cout << "puntos: "<< puntos << " -> "
-                            << dataFromFile.point.x << ":" << dataFromFile.point.y << " .... "
-                            << posXY.x  << "," << posXY.y  << " - "
-                            << posXY2.x << "," << posXY2.y << endl;
-                    }
+//                    int dist = sqrt(pow(posXY.x - posXY2.x,2) + pow(posXY.y - posXY2.y,2));
+//                    if (dist > 30){
+//                        cout << "puntos: "<< puntos << " -> "
+//                            << dataFromFile.point.x << ":" << dataFromFile.point.y << " .... "
+//                            << posXY.x  << "," << posXY.y  << " - "
+//                            << posXY2.x << "," << posXY2.y << endl;
+//                    }
 
                     //Dibujamos el texto del waypoint. Tambien dibujamos siempre un punto indicando su localizacion
                     if (!lastDataFromFile.name.empty()){
@@ -1687,83 +1687,6 @@ void Iofrontend::drawMapArduino(tEvento *evento){
 
         latestMinDist = minDist;
         mapUtilPoint.lastPointVisited = mapUtilPoint.latestPixelToDist;
-    }
-}
-
-/**
-*
-*/
-void Iofrontend::pintarPointLinea (int x1, int y1, int x2, int y2 , t_color color, SDL_Surface *surface)
-{
-    if (x1 >= 0 && y1 < this->getWidth()-1 && x2 >= 0 && y2 < this->getHeight()-1){
-        int tempInt = 0;
-        int i = x1;
-        int j = y1;
-        int tempj = 0;
-        int numerador = (y1-y2);
-        int denominador = (x1-x2);
-        float pendiente = 0;
-        int dif = 0;
-        int contj = 0;
-        int conti = 0;
-        int difx = (x2 > x1) ? x2-x1+1 : x1-x2+1;
-        int dify = (y2 > y1) ? y2-y1+1 : y1-y2+1;
-
-        if (denominador != 0){
-            pendiente = numerador/(float)denominador;
-            while (conti < difx && conti < screen->w){
-                //Funcion de la recta -> j = (y1-y2)/(x1-x2) * (i-x1) + y1
-                j = (int)(pendiente * (i-x1)) + y1;
-                tempj = (int)(pendiente * (i+1-x1)) + y1;
-                dif = (j > tempj) ? j-tempj : tempj-j;
-
-                if (dif > 1){
-                    contj = 0;
-                    while (contj < dif && (conti+1)*dif < dify){
-                        putpixelSafe(screen, i, (j > tempj) ? j-contj : j + contj, SDL_MapRGB(screen->format, color.r, color.g, color.b));
-                        //gestorIconos->drawIcono(trackSeg, surface, i, (j > tempj) ? j-contj : j + contj);
-                        contj++;
-                    }
-                } else {
-                    putpixelSafe(screen,i,j,SDL_MapRGB(screen->format, color.r, color.g, color.b));
-                    //gestorIconos->drawIcono(trackSeg, surface, i, j);
-                }
-
-
-                if ((pendiente > 0. && denominador < 0.) ||
-                    (pendiente < 0. && denominador < 0.) ||
-                    (pendiente == 0 && denominador < 0.)){
-                        i++;
-                } else if((pendiente < 0. && denominador > 0.) ||
-                        (pendiente > 0. && denominador > 0.) ||
-                        (pendiente == 0 && denominador > 0.)) {
-                        i--;
-                }
-
-                conti++;
-            }
-        } else {
-            //    //Comprobamos que el x1 sea siempre el menor punto
-            if (x1 > x2) {
-                tempInt = x1;
-                x1 = x2;
-                x2 = tempInt;
-            }
-
-            if (y1 > y2) {
-                tempInt = y1;
-                y1 = y2;
-                y2 = tempInt;
-            }
-            i = x1;
-            j = y1;
-
-            while (j <= y2 && j < screen->h){
-                putpixelSafe(screen,i,j,SDL_MapRGB(screen->format, color.r, color.g, color.b));
-//                gestorIconos->drawIcono(trackSeg, surface, i, j);
-                j++;
-            }
-        }
     }
 }
 
@@ -2728,12 +2651,12 @@ void Iofrontend::plotLineWidth(int x0, int y0, int x1, int y1, int wd, t_color c
 //   uint32_t pixColor = SDL_MapRGB(surface->format, color.r, color.g, color.b);
 
     for (wd = (wd+1)/2; ; ) {  /* pixel loop */
-        //putpixelSafe(surface,x0, y0, pixColor);
+//        putpixelSafe(surface,x0, y0, pixColor);
         gestorIconos->drawIcono(trackSeg, surface, x0, y0);
         e2 = err; x2 = x0;
         if (2*e2 >= -dx) {                                           /* x step */
              for (e2 += dy, y2 = y0; e2 < ed*wd && (y1 != y2 || dx > dy); e2 += dx){
-            //            putpixelSafe(surface,x0, y2 += sy, pixColor );
+//                        putpixelSafe(surface,x0, y2 += sy, pixColor );
                 gestorIconos->drawIcono(trackSeg, surface, x0, y2 += sy);
              }
 
@@ -2743,7 +2666,7 @@ void Iofrontend::plotLineWidth(int x0, int y0, int x1, int y1, int wd, t_color c
 
         if (2*e2 <= dy) {                                            /* y step */
              for (e2 = dx-e2; e2 < ed*wd && (x1 != x2 || dx < dy); e2 += dy){
-            //            putpixelSafe(surface,x2 += sx, y0, pixColor );
+//                        putpixelSafe(surface,x2 += sx, y0, pixColor );
                 gestorIconos->drawIcono(trackSeg, surface, x2 += sx, y0);
              }
 

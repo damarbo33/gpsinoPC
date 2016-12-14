@@ -52,7 +52,59 @@ using namespace std;
     static const bool drawWaypoints = true;
 
 
+class StatsClass{
+    public :
+        StatsClass(){
+            reset();
+        }
 
+        ~StatsClass(){};
+
+        void reset(){
+            lastLat = 0.0;
+            lastLon = 0.0;
+            lastAlt = 0.0;
+            lastTime = 0.0;
+            alturaCumbre = 0.0;
+            alturaValle = 0.0;
+            lastPosVallesCumbres = 0;
+            altitudCumbre = 0;
+            altitudValle = 0;
+            isSubiendo = false;
+            distValle = 0.0;
+            distCumbre = 0.0;
+            tempDist = 0.0;
+            numCoordRuta = 1;
+            maxCoordRuta = 0;
+        }
+
+        void init(double lat, double lon, double alt){
+            this->lastLat = lat;
+            this->lastLon = lon;
+            this->lastAlt = alt;
+            this->altitudCumbre = alt;     //Altitud en la que se ha detectado una cumbre
+            this->altitudValle = alt;      //Altitud en la que se ha detectado un valle
+        }
+
+        //Variables para calcular la pendiente entre dos valores sucesivos
+        double lastLat;
+        double lastLon;
+        double lastAlt;
+        double lastTime;
+
+        //Para medir las tendencias
+        double alturaCumbre;    //Altitud en la que se ha detectado una cumbre
+        double alturaValle;     //Altitud en la que se ha detectado una cumbre
+        int lastPosVallesCumbres;
+        double altitudCumbre;
+        double altitudValle;
+        bool isSubiendo;        //Con esta variable detectamos si ha habido un cambio de tendencia de subida o bajada
+        double distValle;       //Distancia en la que se ha detectado un valle
+        double distCumbre;      //Distancia en la que se ha detectado una cumbre
+        double tempDist;
+        int numCoordRuta;
+        int maxCoordRuta;
+};
 
 class GeoDrawer
 {
@@ -172,6 +224,7 @@ class GeoDrawer
 
         int calculaAnguloDireccion(Point *lastPixelMapPosT, Point *currentPixelMapPosT);
         void calculaVerticesFlecha( double angulo, int *datosFlecha, double anguloFlecha);
+        void resetStats(double lat, double lon, double alt);
 
         CumbreValle arrayCumbresYValles[10];
         void calcTilesPixels();
@@ -183,7 +236,7 @@ class GeoDrawer
     private:
 
 
-        void calcularEstadisticasRuta(double lat, double lon, double alt, long time, int numCoordRuta);
+        void calcularEstadisticasRuta(double lat, double lon, double alt, long time, StatsClass *stats);
         double mapLonDelta;
         double mapLatBottomDegree;
         std::vector<std::string> strSplitted;

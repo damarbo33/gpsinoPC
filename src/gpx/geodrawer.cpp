@@ -64,8 +64,12 @@ void GeoDrawer::calcLimites(std::vector<std::string> * coordinates){
     mapLatBottom = todouble(strSplitted2.at(0));
     mapLatUp = mapLatBottom;
 
-    for (int i=1;i < coordinates->size();i+=1){
-        strSplitted2 = Constant::split(coordinates->at(i),",");
+    StatsClass stats;
+    stats.maxCoordRuta = coordinates->size();
+
+    for (stats.numCoordRuta=1; stats.numCoordRuta < stats.maxCoordRuta; stats.numCoordRuta++){
+
+        strSplitted2 = Constant::split(coordinates->at(stats.numCoordRuta),",");
         if (strSplitted2.size() > 0){
             lon = todouble(strSplitted2.at(GPXLON));
             if (lon < mapLonLeft){
@@ -82,9 +86,13 @@ void GeoDrawer::calcLimites(std::vector<std::string> * coordinates){
             if (lat < mapLatBottom){
                 mapLatBottom = lat;
             }
-            calcularEstadisticasRuta(lat, lon, todouble(strSplitted2.at(GPXALT)), Constant::strToTipo<long>(strSplitted2.at(GPXTIME)), i);
+            calcularEstadisticasRuta(lat, lon,
+                                     todouble(strSplitted2.at(GPXALT)),
+                                     Constant::strToTipo<long>(strSplitted2.at(GPXTIME)),
+                                     &stats);
         }
     }
+
     mapLonDelta = mapLonRight - mapLonLeft;
     mapLatBottomDegree = mapLatBottom * PI / 180.0;
     desplazamiento = mapLonDelta * 0.1;
@@ -122,29 +130,41 @@ void GeoDrawer::logEstadisticasRuta(){
 /**
 *
 */
-void GeoDrawer::calcularEstadisticasRuta(double lat, double lon, double alt, long time, int numCoordRuta){
+void GeoDrawer::resetStats(double lat, double lon, double alt){
+    this->acumSubida = 0.0;
+    this->acumBajada = 0.0;
+    this->maxAltitud = alt;
+    this->minAltitud = alt;
+    this->distancia = 0;
+    this->maxDesnivel2Puntos = 0;
+    this->sumaPendienteSubida = 0;
+    this->sumaPendienteBajada = 0;
+    this->numPendienteSubida = 0;
+    this->numPendienteBajada = 0;
+    this->distLlano = 0.0;
+    this->distSubida = 0.0;
+    this->distBajada = 0.0;
+    this->velocidadMaxima = 0.0;
+    this->velocidadMinima = 300000; //La velocidad de la luz 300.000 m/s. ! A ver quien lo supera
+    this->sumaVelocidadMedia = 0;
+    this->numSumaVelocidad = 0;
+    this->velocidadMedia = 0;
+    this->tiempoTotal = 0;
+    this->tiempoParado = 0;
+    this->tiempoMovimiento = 0;
+    this->listaCumbresYValles.clear();
+}
+
+/**
+*
+*/
+void GeoDrawer::calcularEstadisticasRuta(double lat, double lon, double alt, long time, StatsClass *stats){
 
     const int maxPendientePermitida = 100;  //En senderismo es posible pendientes del 100 o mayores. Pero establecemos este limite para evitar problemas con gps
     const int limitePendienteLlano = 3;     //Establecemos que una pendiente menor al 3% es terreno llano
     const float margenPendiente = 0.05;     //En porcentaje 0.05 = 5% para medir cambios de tendencias en ascension o descenso
     const float limiteVelocidadMin = 0.15;     //En porcentaje 0.9 = 90% para no contar velocidades demasiado pequeñas en relacion a la distancia recorrida
-
-    //Variables para calcular la pendiente entre dos valores sucesivos
-    static double lastLat = 0.0;
-    static double lastLon = 0.0;
-    static double lastAlt = 0.0;
-    static double lastTime = 0.0;
-
-    //Para medir las tendencias
-    static double alturaCumbre = 0.0;
-    static double alturaValle = 0.0;
-    static int lastPosVallesCumbres = 0;
-    static double altitudCumbre = 0;
-    static double altitudValle = 0;
-    static bool isSubiendo = false;
-    static double distValle = 0.0;
-    static double distCumbre = 0.0;
-    static double tempDist = 0.0;
+    const double minDiffAltToCumbres = 20.0;
 
     //Variables temporales
     double distanciaPuntos = 0.0;
@@ -153,81 +173,52 @@ void GeoDrawer::calcularEstadisticasRuta(double lat, double lon, double alt, lon
     double velocidadActual = 0.0;
     double difTiempos = 0.0;
 
-    if (numCoordRuta <= 1){
-        lastLat = lat;
-        lastLon = lon;
-        lastAlt = alt;
-        acumSubida = 0.0;
-        acumBajada = 0.0;
-        maxAltitud = alt;
-        minAltitud = alt;
-        distancia = 0;
-        maxDesnivel2Puntos = 0;
-        sumaPendienteSubida = 0;
-        sumaPendienteBajada = 0;
-        numPendienteSubida = 0;
-        numPendienteBajada = 0;
-        distLlano = 0.0;
-        distSubida = 0.0;
-        distBajada = 0.0;
-        //Calculos de puntos clave de la ruta como valles y cumbres
-        alturaCumbre = 0.0;
-        alturaValle = 0.0;
-        lastPosVallesCumbres = 0;
-        altitudCumbre = alt;     //Altitud en la que se ha detectado una cumbre
-        altitudValle = alt;      //Altitud en la que se ha detectado un valle
-        isSubiendo = false;         //Con esta variable detectamos si ha habido un cambio de tendencia de subida o bajada
-        distValle = 0.0;            //Distancia en la que se ha detectado un valle
-        distCumbre = 0.0;           //Distancia en la que se ha detectado una cumbre
-        tempDist = 0.0;
-        velocidadMaxima = 0.0;
-        velocidadMinima = 300000; //La velocidad de la luz 300.000 m/s. ! A ver quien lo supera
-        sumaVelocidadMedia = 0;
-        numSumaVelocidad = 0;
-        lastTime = 0;
-        velocidadMedia = 0;
-        difTiempos = 0.0;
-        tiempoTotal = 0;
-        tiempoParado = 0;
-        tiempoMovimiento = 0;
-        listaCumbresYValles.clear();
+    distanciaPuntos = fabs(getDistance(stats->lastLat, stats->lastLon, lat, lon)) * 1000; // en metros
+    diferenciaAlt = fabs(alt - stats->lastAlt);
+    //Calculamos la pendiente en porcentaje. Si la distancia de puntos es 0, le ponemos un
+    //desnivel del 100% (casi imposible normalmente)
+    pendiente = distanciaPuntos != 0.0 ? diferenciaAlt * 100 / distanciaPuntos : 100;
 
-    } else {
-        distanciaPuntos = fabs(getDistance(lastLat, lastLon, lat, lon)) * 1000; // en metros
-        diferenciaAlt = fabs(alt - lastAlt);
+    if (stats->numCoordRuta <= 1){
+        stats->init(lat, lon, alt);
+        this->resetStats(lat, lon, alt);
+    } else if (alt != 0.0){
+        //Si la altitud de la cumbre es exactamente 0.0 es muy probable que se haya EDITADO el track y
+        //que la altura no sea correcta. Por lo tanto no lo procesamos
+
         //Nos fiamos de la coordenadas de latitud y longitud para calcular distancias
         distancia += distanciaPuntos;
-        //Calculamos la pendiente en porcentaje. Si la distancia de puntos es 0, le ponemos un
-        //desnivel del 100% (casi imposible normalmente)
-        pendiente = distanciaPuntos != 0.0 ? diferenciaAlt * 100 / distanciaPuntos : 100;
         //No permitimos pendientes superiores a un porcentaje por posibles
         //desajustes en las mediciones que obtenemos en el gps. (Si somos Felix Baumgartner
         //lo deberiamos desactivar)
         if (pendiente < maxPendientePermitida || correccionGPS == false){
             //Calculamos las pendientes medias de subida y bajada
-            if (pendiente > limitePendienteLlano && alt > lastAlt){
+            if (pendiente > limitePendienteLlano && alt > stats->lastAlt){
                 sumaPendienteSubida += pendiente;
                 numPendienteSubida++;
                 acumSubida += diferenciaAlt;
-            } else if (pendiente > limitePendienteLlano && alt < lastAlt){
+            } else if (pendiente > limitePendienteLlano && alt < stats->lastAlt){
                 sumaPendienteBajada += pendiente;
                 numPendienteBajada++;
                 acumBajada += diferenciaAlt;
             }
 
-            //Calculos de cumbres y valles de la ruta
-            if (alt > alturaCumbre * (double)(1.0 + margenPendiente)){
-                //Estamos subiendo
-                alturaCumbre = alt;
-                alturaValle = alt;
+            bool processDiff = fabs(alt - stats->alturaValle) > minDiffAltToCumbres
+                            || fabs(alt - stats->alturaCumbre) > minDiffAltToCumbres;
 
-                if (isSubiendo == false && lastPosVallesCumbres > 0){
+            //Calculos de cumbres y valles de la ruta
+            if (alt > stats->alturaCumbre * (double)(1.0 + margenPendiente) && processDiff){
+                //Estamos subiendo
+                stats->alturaCumbre = alt;
+                stats->alturaValle = alt;
+
+                if (stats->isSubiendo == false && stats->lastPosVallesCumbres > 0){
                     CumbreValle topografia;
                     topografia.geoPos.setLatitude(lat);
                     topografia.geoPos.setLongitude(lon);
-                    topografia.ele = altitudValle;
+                    topografia.ele = stats->altitudValle;
                     topografia.tipo = VALLE;
-                    topografia.dist = distValle;
+                    topografia.dist = stats->distValle;
                     listaCumbresYValles.push_back(topografia);
 
 //                    cout << std::setprecision(1) << "Valle de altura " << altitudValle << " en km "
@@ -235,49 +226,49 @@ void GeoDrawer::calcularEstadisticasRuta(double lat, double lon, double alt, lon
 //                         << std::setprecision(8) << " lat: " << lat << " lon: " << lon
 //                         << endl;
                 }
-                lastPosVallesCumbres++;
-                altitudCumbre = 0.0;
-                altitudValle = alt;
-                isSubiendo = true;
-            } else if (alt < alturaValle * (double)(1.0 - margenPendiente)){
+                stats->lastPosVallesCumbres++;
+                stats->altitudCumbre = 0.0;
+                stats->altitudValle = alt;
+                stats->isSubiendo = true;
+            } else if (alt < stats->alturaValle * (double)(1.0 - margenPendiente) && processDiff){
                 //Estamos bajando
-                alturaValle = alt;
-                alturaCumbre = alt;
+                stats->alturaValle = alt;
+                stats->alturaCumbre = alt;
 
-                if (isSubiendo == true && lastPosVallesCumbres > 0){
+                if (stats->isSubiendo == true && stats->lastPosVallesCumbres > 0){
                     CumbreValle topografia;
                     topografia.geoPos.setLatitude(lat);
                     topografia.geoPos.setLongitude(lon);
-                    topografia.ele = altitudCumbre;
+                    topografia.ele = stats->altitudCumbre;
                     topografia.tipo = CUMBRE;
-                    topografia.dist = distCumbre;
+                    topografia.dist = stats->distCumbre;
                     listaCumbresYValles.push_back(topografia);
 //                    cout << std::setprecision(1) << "Cumbre de altura " << altitudCumbre << " en km "
 //                         << std::setprecision(3) << distCumbre / 1000.0
 //                         << std::setprecision(8) << " lat: " << lat << " lon: " << lon
 //                         << endl;
                 }
-                lastPosVallesCumbres++;
-                altitudCumbre = 0.0;
-                altitudValle = alt;
-                isSubiendo = false;
-            } else {
+                stats->lastPosVallesCumbres++;
+                stats->altitudCumbre = 0.0;
+                stats->altitudValle = alt;
+                stats->isSubiendo = false;
+            } else if (alt != 0.0){
                 //No se detecta variacion suficiente para decidir si la tendencia es de subida o bajada
-                if (alt > altitudCumbre){
-                    altitudCumbre = alt;
-                    distCumbre = distancia;
+                if (alt > stats->altitudCumbre){
+                    stats->altitudCumbre = alt;
+                    stats->distCumbre = distancia;
                 }
-                if (alt < altitudValle){
-                    altitudValle = alt;
-                    distValle = distancia;
+                if (alt < stats->altitudValle){
+                    stats->altitudValle = alt;
+                    stats->distValle = distancia;
                 }
             }
         } //Fin correccion del gps
 
         //Calculamos la distancia de subida, bajada o llano segun la pendiente
-        if (pendiente > limitePendienteLlano && alt > lastAlt){
+        if (pendiente > limitePendienteLlano && alt > stats->lastAlt){
             distSubida += distanciaPuntos;
-        } else if (pendiente > limitePendienteLlano && alt < lastAlt){
+        } else if (pendiente > limitePendienteLlano && alt < stats->lastAlt){
             distBajada += distanciaPuntos;
         } else {
             distLlano += distanciaPuntos;
@@ -296,7 +287,7 @@ void GeoDrawer::calcularEstadisticasRuta(double lat, double lon, double alt, lon
             minAltitud = alt;
         }
 
-        difTiempos = fabs(time - lastTime);
+        difTiempos = fabs(time - stats->lastTime);
         tiempoTotal += difTiempos;
 
         //Calculamos las velocidades
@@ -327,10 +318,10 @@ void GeoDrawer::calcularEstadisticasRuta(double lat, double lon, double alt, lon
         }
 
         //Actualizamos valores. ESTO SIEMPRE AL FINAL******
-        lastLat = lat;
-        lastLon = lon;
-        lastAlt = alt;
-        lastTime = time;
+        stats->lastLat = lat;
+        stats->lastLon = lon;
+        stats->lastAlt = alt;
+        stats->lastTime = time;
     }
 }
 
