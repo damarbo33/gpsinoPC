@@ -15,6 +15,7 @@ MercatorProjection::MercatorProjection(){
 *
 */
 MercatorProjection::~MercatorProjection(){
+	delete pixelOrigin_;
 }
 
 /**
