@@ -1823,7 +1823,7 @@ void Iofrontend::pintarFlechaGPS(Point *punto, double rotacion){
         pintarLinea(posFlechas[2] + punto->x, posFlechas[3] + punto->y, posFlechas[0] + punto->x, posFlechas[1] + punto->y, cAzulOscuro);
         */
         fillTriangle(punto->x, punto->y, posFlechas[0] + punto->x, posFlechas[1] + punto->y,
-                     posFlechas[2] + punto->x, posFlechas[3] + punto->y,cVerde);
+                     posFlechas[2] + punto->x, posFlechas[3] + punto->y,cVerdeOscuro);
         /*
 
         //Calculamos el punto medio de los dos vertices contrarios al central

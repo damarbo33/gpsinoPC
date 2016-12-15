@@ -50,6 +50,12 @@ using namespace std;
     static const int anguloFlechas = 20;
     static const int hipotenusa = 20;  //Indica lo larga que es la flecha
     static const bool drawWaypoints = true;
+    static const int maxPendientePermitida = 100;  //En senderismo es posible pendientes del 100 o mayores. Pero establecemos este limite para evitar problemas con gps
+    static const int limitePendienteLlano = 3;     //Establecemos que una pendiente menor al 3% es terreno llano
+    static const float margenPendiente = 0.05;     //En porcentaje 0.05 = 5% para medir cambios de tendencias en ascension o descenso
+    static const float limiteVelocidadMin = 0.15;     //En porcentaje 0.9 = 90% para no contar velocidades demasiado pequeñas en relacion a la distancia recorrida
+    static const double minDiffAltToCumbres = 20.0;
+
 
 
 class StatsClass{
@@ -225,6 +231,7 @@ class GeoDrawer
         int calculaAnguloDireccion(Point *lastPixelMapPosT, Point *currentPixelMapPosT);
         void calculaVerticesFlecha( double angulo, int *datosFlecha, double anguloFlecha);
         void resetStats(double lat, double lon, double alt);
+        void procesaPicosTerreno(double lat, double lon, double alt, long time, StatsClass *stats, bool isCumbre);
 
         CumbreValle arrayCumbresYValles[10];
         void calcTilesPixels();

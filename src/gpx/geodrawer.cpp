@@ -86,6 +86,7 @@ void GeoDrawer::calcLimites(std::vector<std::string> * coordinates){
             if (lat < mapLatBottom){
                 mapLatBottom = lat;
             }
+
             calcularEstadisticasRuta(lat, lon,
                                      todouble(strSplitted2.at(GPXALT)),
                                      Constant::strToTipo<long>(strSplitted2.at(GPXTIME)),
@@ -155,16 +156,32 @@ void GeoDrawer::resetStats(double lat, double lon, double alt){
     this->listaCumbresYValles.clear();
 }
 
+/**Procesando cumbres y Valles*/
+void GeoDrawer::procesaPicosTerreno(double lat, double lon, double alt, long time, StatsClass *stats, bool isCumbre){
+
+    if ( (stats->isSubiendo && isCumbre || !stats->isSubiendo && !isCumbre) && stats->lastPosVallesCumbres > 0){
+        CumbreValle topografia;
+        topografia.geoPos.setLatitude(lat);
+        topografia.geoPos.setLongitude(lon);
+        topografia.ele = isCumbre ? stats->altitudCumbre : stats->altitudValle;
+        topografia.tipo = isCumbre ? CUMBRE : VALLE;
+        topografia.dist = isCumbre ? stats->distCumbre : stats->distValle;
+        listaCumbresYValles.push_back(topografia);
+    }
+    //Actualizacion de valores
+    stats->alturaValle = alt;
+    stats->alturaCumbre = alt;
+    stats->lastPosVallesCumbres++;
+    stats->altitudCumbre = 0.0;
+    stats->altitudValle = alt;
+    stats->isSubiendo = !isCumbre;
+}
+
 /**
 *
 */
 void GeoDrawer::calcularEstadisticasRuta(double lat, double lon, double alt, long time, StatsClass *stats){
 
-    const int maxPendientePermitida = 100;  //En senderismo es posible pendientes del 100 o mayores. Pero establecemos este limite para evitar problemas con gps
-    const int limitePendienteLlano = 3;     //Establecemos que una pendiente menor al 3% es terreno llano
-    const float margenPendiente = 0.05;     //En porcentaje 0.05 = 5% para medir cambios de tendencias en ascension o descenso
-    const float limiteVelocidadMin = 0.15;     //En porcentaje 0.9 = 90% para no contar velocidades demasiado pequeñas en relacion a la distancia recorrida
-    const double minDiffAltToCumbres = 20.0;
 
     //Variables temporales
     double distanciaPuntos = 0.0;
@@ -209,6 +226,7 @@ void GeoDrawer::calcularEstadisticasRuta(double lat, double lon, double alt, lon
                             || fabs(alt - stats->alturaCumbre) > minDiffAltToCumbres;
 
             if (endRoutePoint && listaCumbresYValles.size() > 0){
+                //Si es el ultimo punto, anyadirlo como valle o cumbre
                 CumbreValle tmpTopo = listaCumbresYValles.at(listaCumbresYValles.size() - 1);
                 CumbreValle topografia;
                 topografia.geoPos.setLatitude(lat);
@@ -217,53 +235,12 @@ void GeoDrawer::calcularEstadisticasRuta(double lat, double lon, double alt, lon
                 topografia.tipo = alt > tmpTopo.ele ? CUMBRE : VALLE;
                 topografia.dist = alt > tmpTopo.ele ? stats->distCumbre : stats->distValle;
                 listaCumbresYValles.push_back(topografia);
-
-            //Calculos de cumbres y valles de la ruta
             } else if ( alt > stats->alturaCumbre * (double)(1.0 + margenPendiente) && processDiff ){
-                //Estamos subiendo
-                stats->alturaCumbre = alt;
-                stats->alturaValle = alt;
-
-                if (stats->isSubiendo == false && stats->lastPosVallesCumbres > 0){
-                    CumbreValle topografia;
-                    topografia.geoPos.setLatitude(lat);
-                    topografia.geoPos.setLongitude(lon);
-                    topografia.ele = stats->altitudValle;
-                    topografia.tipo = VALLE;
-                    topografia.dist = stats->distValle;
-                    listaCumbresYValles.push_back(topografia);
-
-//                    cout << std::setprecision(1) << "Valle de altura " << altitudValle << " en km "
-//                         << std::setprecision(3) << distValle / 1000.0
-//                         << std::setprecision(8) << " lat: " << lat << " lon: " << lon
-//                         << endl;
-                }
-                stats->lastPosVallesCumbres++;
-                stats->altitudCumbre = 0.0;
-                stats->altitudValle = alt;
-                stats->isSubiendo = true;
+                //Estamos subiendo, procesa la altura como un valle
+                procesaPicosTerreno(lat, lon, alt, time, stats, false);
             } else if (alt < stats->alturaValle * (double)(1.0 - margenPendiente) && processDiff){
-                //Estamos bajando
-                stats->alturaValle = alt;
-                stats->alturaCumbre = alt;
-
-                if (stats->isSubiendo == true && stats->lastPosVallesCumbres > 0){
-                    CumbreValle topografia;
-                    topografia.geoPos.setLatitude(lat);
-                    topografia.geoPos.setLongitude(lon);
-                    topografia.ele = stats->altitudCumbre;
-                    topografia.tipo = CUMBRE;
-                    topografia.dist = stats->distCumbre;
-                    listaCumbresYValles.push_back(topografia);
-//                    cout << std::setprecision(1) << "Cumbre de altura " << altitudCumbre << " en km "
-//                         << std::setprecision(3) << distCumbre / 1000.0
-//                         << std::setprecision(8) << " lat: " << lat << " lon: " << lon
-//                         << endl;
-                }
-                stats->lastPosVallesCumbres++;
-                stats->altitudCumbre = 0.0;
-                stats->altitudValle = alt;
-                stats->isSubiendo = false;
+                //Estamos bajando. Procesa la altura como una cumbre
+                procesaPicosTerreno(lat, lon, alt, time, stats, true);
             } else if (alt != 0.0){
                 //No se detecta variacion suficiente para decidir si la tendencia es de subida o bajada
                 if (alt > stats->altitudCumbre){
