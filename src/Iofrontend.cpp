@@ -15,6 +15,11 @@ static int limitW = 0;
 static int limitH = 0;
 static int limitX = 0;
 static int limitY = 0;
+//For opencyclemap
+static t_color umbral = {195,182,174};
+//For openstreetmap
+//static t_color umbral = {217,219,207};
+
 
 /**
 * Constructor
@@ -1516,7 +1521,34 @@ void Iofrontend::drawMapArduino(tEvento *evento){
         UIPicture *objPict = (UIPicture *)ObjectsMenu[PANTALLAGPSINO]->getObjByName("mapBox");
         //Acciones del teclado
 
+        string umbralStr;
+
         if (evento != NULL){
+            if (evento->isKey && evento->key == SDLK_q){
+                umbral.r--;
+            } else if (evento->isKey && evento->key == SDLK_w){
+                umbral.r++;
+            } else if (evento->isKey && evento->key == SDLK_e){
+                umbral.g--;
+            } else if (evento->isKey && evento->key == SDLK_r){
+                umbral.g++;
+            } else if (evento->isKey && evento->key == SDLK_t){
+                umbral.b--;
+            } else if (evento->isKey && evento->key == SDLK_y){
+                umbral.b++;
+            }
+
+            if (evento->isKey && (evento->key == SDLK_q || evento->key == SDLK_w
+                                  || evento->key == SDLK_e || evento->key == SDLK_r
+                                  || evento->key == SDLK_t || evento->key == SDLK_y)){
+
+                umbralStr = "umbral: r=" + Constant::TipoToStr(umbral.r) + ", g="
+                            + Constant::TipoToStr(umbral.g) + ", b="
+                            + Constant::TipoToStr(umbral.b);
+
+                Traza::print(umbralStr.c_str(), W_DEBUG);
+            }
+
             if (evento->isKey && evento->key == SDLK_a){
                 geoDrawer->incZoomLevel();
                 //Cargamos la ruta de nuevo con la informacion de pixels precalculada para la ruta
@@ -2356,8 +2388,18 @@ void Iofrontend::drawTile(VELatLong *currentLatLon, int zoom, int sideTileX, int
 
         for (int i=inicioI; i < finI; i++){
             for (int j=inicioJ; j < finJ; j++){
+                Uint8 r,g,b;
+
+                SDL_GetRGB(getpixel(optimizedImage, i, j),optimizedImage->format,&r,&g,&b);
+
                 putpixelSafe(objPict->getImgGestor()->getSurface(), i + newPos.x + desplazaX, j + newPos.y + desplazaY,
-                             getpixel(optimizedImage, i, j));
+                             SDL_MapRGB(optimizedImage->format,
+                                        r > umbral.r ? 0xFF : 0,
+                                        g > umbral.g ? 0xFF : 0,
+                                        b > umbral.b ? 0xFF : 0));
+
+//                putpixelSafe(objPict->getImgGestor()->getSurface(), i + newPos.x + desplazaX, j + newPos.y + desplazaY,
+//                             getpixel(optimizedImage, i, j));
             }
         }
         SDL_FreeSurface(optimizedImage);

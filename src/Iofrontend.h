@@ -48,7 +48,7 @@
             MAXMENU
     } enumMenus;
 
-
+static const t_color arrColorsLimit[8] = {cNegro, cAzulTotal, cVerde, cTurquesa, cRojo, cMagenta, cAmarillo, cBlanco};
 
 class Iofrontend : public Ioutil{
 
