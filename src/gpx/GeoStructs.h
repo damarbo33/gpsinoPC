@@ -172,7 +172,7 @@ class PosMapa{
             distancia = 0.0;
         }
 
-        PosMapa(int x1, int y1){
+        PosMapa(long x1, long y1){
             PosMapa();
             point.x=x1;
             point.y=y1;

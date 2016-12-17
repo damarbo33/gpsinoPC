@@ -32,11 +32,6 @@
 #include "image565.h"
 #include <vector>
 
-    struct t_mapSurface{
-        int orientacion;
-        SDL_Surface *tmpSurface;
-    };
-
     //*********************************************************************************/
     //Cuidado con no sobrepasar el numero de elementos que define la constante MAXMENU
     //*********************************************************************************/
