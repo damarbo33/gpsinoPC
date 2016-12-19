@@ -59,8 +59,8 @@ void MercatorProjection::fromPointToLatLng(Point *point, VELatLong *latLng){
 }
 
 /**
-* Dada la esquina superior izquierda de un tile de un mapa, permite obtener
-* cual es la posicion x,y en el mismo mapa de otra lat,lon especificada
+* Obtiene la posicion virtual del mapa para que el punto especificado de latitud y longitud
+* quede centrado en cualquier pantalla
 */
 void MercatorProjection::getPosPixelTile(VELatLong *currentLatLon, int zoom, Point *MapXY, Point *numTile){
     double scale = pow(2, zoom);

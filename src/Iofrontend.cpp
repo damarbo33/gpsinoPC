@@ -2319,7 +2319,8 @@ void Iofrontend::pintarCapaTerreno(VELatLong *currentGPSPos){
                         drawTile(currentGPSPos, zoom, 0, -1 * countTileY, numTile, pixelTile);
                         numTilesDrawed++;
                     }
-                } else {
+                }
+                else {
                     //Pintando por arriba
                     if (!leftLimit && !upLimit){
                         drawTile(currentGPSPos, zoom, -1 * countTileX, -1 * countTileY, numTile, pixelTile);
@@ -2362,9 +2363,15 @@ void Iofrontend::drawTile(VELatLong *currentLatLon, int zoom, int sideTileX, int
     ImagenGestor imgGestor;
     UIPicture *objPict = (UIPicture *)ObjectsMenu[PANTALLAGPSINO]->getObjByName("mapBox");
     Point newPos;
+
+    //Pixel tile contiene el punto (x,y) de la imagen que representa la
+    //posicion actual del gps. Calculamos el desplazamiento que habria
+    //que aplicar para llevar ese pixel de la imagen al centro de la pantalla.
     newPos.x = objPict->getW() / 2 - pixelTile.x;
     newPos.y = objPict->getH() / 2 - pixelTile.y;
 
+    //Dependiendo del tile que pintemos en base alrededor del obtenido de
+    //la coordenada del gps inicial, desplazamos el mapa
     int desplazaX = mapWidth * sideTileX;
     int desplazaY = mapHeight * sideTileY;
 
@@ -2375,8 +2382,12 @@ void Iofrontend::drawTile(VELatLong *currentLatLon, int zoom, int sideTileX, int
                 //+ string(".png");
                 + string(".bmp");
 
-    const int inicioI = (newPos.x + desplazaX < 0) ? abs(newPos.x + desplazaX) : 0;
-    const int inicioJ = (newPos.y + desplazaY < 0) ? abs(newPos.y + desplazaY) : 0;
+    const int offsetX = newPos.x + desplazaX;
+    const int offsetY = newPos.y + desplazaY;
+
+    //Se calcula desde donde se debe pintar en la pantalla
+    const int inicioX = (offsetX < 0) ? abs(offsetX) : 0;
+    const int inicioY = (offsetY < 0) ? abs(offsetY) : 0;
 
 //    if (inicioI > 0|| inicioJ > 0)
 //        cout << "inicioI: " << inicioI << " " << "inicioJ: " << inicioJ << endl;
@@ -2411,7 +2422,7 @@ void Iofrontend::drawTile(VELatLong *currentLatLon, int zoom, int sideTileX, int
         t_mapSurface bmpFile;
         imagen.screen = objPict->getImgGestor()->getSurface();
         imagen.cargarBmp(imgLocation , &bmpFile);
-        imagen.bmpdraw(&bmpFile, inicioI, inicioJ, newPos.x + desplazaX, newPos.y + desplazaY);
+        imagen.bmpdraw(&bmpFile, inicioX, inicioY, offsetX, offsetY);
     }
 }
 
