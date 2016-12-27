@@ -5,12 +5,7 @@
 
 
 const int SURFACE_MODE = SDL_SWSURFACE;
-//static const int gpsinoW = 640;
-//static const int gpsinoH = 350;
-static const int gpsinoW = 128;
-static const int gpsinoH = 160;
-static const int mapWidth = 256;
-static const int mapHeight = 256;
+
 static int limitW = 0;
 static int limitH = 0;
 static int limitX = 0;
@@ -2379,8 +2374,9 @@ void Iofrontend::drawTile(VELatLong *currentLatLon, int zoom, int sideTileX, int
                 + FILE_SEPARATOR + Constant::TipoToStr(zoom)
                 + FILE_SEPARATOR + Constant::TipoToStr((long)numTile.x + (long)sideTileX)
                 + FILE_SEPARATOR + Constant::TipoToStr((long)numTile.y + (long)sideTileY)
-                //+ string(".png");
-                + string(".bmp");
+                + string(".png");
+                //+ string(".bmp")
+                //;
 
     const int offsetX = newPos.x + desplazaX;
     const int offsetY = newPos.y + desplazaY;
@@ -2389,40 +2385,41 @@ void Iofrontend::drawTile(VELatLong *currentLatLon, int zoom, int sideTileX, int
     const int inicioX = (offsetX < 0) ? abs(offsetX) : 0;
     const int inicioY = (offsetY < 0) ? abs(offsetY) : 0;
 
-//    if (inicioI > 0|| inicioJ > 0)
-//        cout << "inicioI: " << inicioI << " " << "inicioJ: " << inicioJ << endl;
-//    if (finI < mapWidth || finJ < mapHeight)
-//        cout << "finI: " << finI << " " << "finJ: " << finJ << endl;
-
     if (dir.existe(imgLocation)){
-//        SDL_Surface *optimizedImage;
-//        imgGestor.loadImgDisplay(imgLocation.c_str(), &optimizedImage);
-//        for (int i=inicioI; i < finI; i++){
-//            for (int j=inicioJ; j < finJ; j++){
-//                Uint8 r,g,b;
-//
-//                SDL_GetRGB(getpixel(optimizedImage, i, j), optimizedImage->format,&r,&g,&b);
-//
-////                putpixelSafe(objPict->getImgGestor()->getSurface(), i + newPos.x + desplazaX, j + newPos.y + desplazaY,
-////                             SDL_MapRGB(optimizedImage->format,
-////                                        r > umbral.r ? 0xFF : 0,
-////                                        g > umbral.g ? 0xFF : 0,
-////                                        b > umbral.b ? 0xFF : 0));
-//
-////                putpixelSafe(objPict->getImgGestor()->getSurface(), i + newPos.x + desplazaX, j + newPos.y + desplazaY,
-////                             getpixel(optimizedImage, i, j));
-//                    putpixelSafe(objPict->getImgGestor()->getSurface(), i + newPos.x + desplazaX, j + newPos.y + desplazaY,
-//                             getpixel(optimizedImage, i, j));
-//            }
-//        }
-//        SDL_FreeSurface(optimizedImage);
+        SDL_Surface *optimizedImage;
+        imgGestor.loadImgDisplay(imgLocation.c_str(), &optimizedImage);
+        const int finx = (gpsinoW - offsetX > optimizedImage->w ) ? optimizedImage->w  : gpsinoW - offsetX;
+        const int finy = (gpsinoH - offsetY > optimizedImage->h) ? optimizedImage->h : gpsinoH - offsetY;
 
-        cout << "tile: " << imgLocation << endl;
-        Image565 imagen;
-        t_mapSurface bmpFile;
-        imagen.screen = objPict->getImgGestor()->getSurface();
-        imagen.cargarBmp(imgLocation , &bmpFile);
-        imagen.bmpdraw(&bmpFile, inicioX, inicioY, offsetX, offsetY);
+
+        for (int i=inicioX; i < finx; i++){
+            for (int j=inicioY; j < finy; j++){
+                Uint8 r,g,b;
+
+                SDL_GetRGB(getpixel(optimizedImage, i, j), optimizedImage->format,&r,&g,&b);
+
+//                putpixelSafe(objPict->getImgGestor()->getSurface(), i + newPos.x + desplazaX, j + newPos.y + desplazaY,
+//                             SDL_MapRGB(optimizedImage->format,
+//                                        r > umbral.r ? 0xFF : 0,
+//                                        g > umbral.g ? 0xFF : 0,
+//                                        b > umbral.b ? 0xFF : 0));
+
+//                putpixelSafe(objPict->getImgGestor()->getSurface(), i + newPos.x + desplazaX, j + newPos.y + desplazaY,
+//                             getpixel(optimizedImage, i, j));
+                    putpixelSafe(objPict->getImgGestor()->getSurface(), i + newPos.x + desplazaX, j + newPos.y + desplazaY,
+                             getpixel(optimizedImage, i, j));
+            }
+        }
+        SDL_FreeSurface(optimizedImage);
+
+//        cout << "tile: " << imgLocation << endl;
+//        Image565 imagen;
+//        t_mapSurface bmpFile;
+//        imagen.screen = objPict->getImgGestor()->getSurface();
+//        if (imagen.tileLoad(imgLocation , &bmpFile)){
+//            imagen.tileDraw(&bmpFile, inicioX, inicioY, offsetX, offsetY);
+//        }
+
     }
 }
 
