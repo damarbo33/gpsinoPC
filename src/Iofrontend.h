@@ -144,6 +144,8 @@ class Iofrontend : public Ioutil{
         int downloadMaps(tEvento *evento);
         int chActionAround(tEvento *evento);
         int chActionFull(tEvento *evento);
+        int actionInstallMaps(tEvento *evento);
+        int installMaps(tEvento *evento);
 
         string procesaGPX(string filename, int angulo);
         void analyzeGpx(string ruta);

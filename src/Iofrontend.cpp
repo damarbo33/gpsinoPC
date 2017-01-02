@@ -131,12 +131,13 @@ void Iofrontend::initUIObjs(){
     despY += 25;
 
     ObjectsMenu[PANTALLAGPSINO]->add("lblFile", GUILABEL, 3, despY + 3, 50, 20, "Archivo: ", false)->setTextColor(cBlanco);
-    ObjectsMenu[PANTALLAGPSINO]->add("inputFileGPX",   GUIINPUTWIDE, despX, despY, 400, 20, "", false);
+    ObjectsMenu[PANTALLAGPSINO]->add("inputFileGPX",   GUIINPUTWIDE, despX, despY, 400, 20, "", false)->setEnabled(false);
     ObjectsMenu[PANTALLAGPSINO]->add("btnOpenLocal",   GUIBUTTON, despX + 405, despY,FAMFAMICONW, FAMFAMICONH, "Abrir fichero local", false)->setIcon(folder)->setVerContenedor(false);
     ObjectsMenu[PANTALLAGPSINO]->add("btnDownloadMap", GUIBUTTON, despX + 405 + 5 + FAMFAMICONW ,despY,FAMFAMICONW, FAMFAMICONH, "Descargar mapas", false)->setIcon(map_go)->setVerContenedor(false);
+    ObjectsMenu[PANTALLAGPSINO]->add("btnInstallMap", GUIBUTTON, despX + 405 + 2*( 5 + FAMFAMICONW) ,despY,FAMFAMICONW, FAMFAMICONH, "Instalar mapas", false)->setIcon(map_add)->setVerContenedor(false);
     ObjectsMenu[PANTALLAGPSINO]->add("progDownload", GUIPROGRESSBAR, 0, getHeight() - 20, getWidth(), 20, "Progreso de descarga", false)->setEnabled(true);
-    ObjectsMenu[PANTALLAGPSINO]->add("mapBox", GUIPICTURE, 2, Constant::getINPUTH()*3 + 25 * 2, gpsinoW, gpsinoH, "mapBox", false)->setVisible(true);
-
+    ObjectsMenu[PANTALLAGPSINO]->add("mapBox", GUIPICTURE, 0,0, gpsinoW, gpsinoH, "mapBox", true)->setVisible(true);
+    //ObjectsMenu[PANTALLAGPSINO]->add("mapBox", GUIPICTURE, 2, Constant::getINPUTH()*3 + 25 * 2, gpsinoW, gpsinoH, "mapBox", true)->setVisible(true);
 
     UIPicture *objPict = (UIPicture *)ObjectsMenu[PANTALLAGPSINO]->getObjByName("mapBox");
     limitH = objPict->getH();
@@ -166,6 +167,7 @@ void Iofrontend::initUIObjs(){
 
     addEvent("btnOpenLocal", &Iofrontend::openGpx);
     addEvent("btnDownloadMap", &Iofrontend::downloadMaps);
+    addEvent("btnInstallMap", &Iofrontend::actionInstallMaps);
 
     addEvent("chDownAround", &Iofrontend::chActionAround);
     addEvent("chDownFull", &Iofrontend::chActionFull);
@@ -1331,6 +1333,79 @@ int Iofrontend::downloadMaps(tEvento *evento){
     } catch (Excepcion &e){
         Traza::print("Iofrontend::downloadMaps: " + string(e.getMessage()), W_ERROR);
     }
+    return 0;
+}
+
+int Iofrontend::actionInstallMaps(tEvento *evento){
+
+    if (fileGPSData.empty()){
+        showMessage("Es necesario cargar un track previamente", 2000);
+    } else {
+        string fichName = showExplorador(evento);
+        Dirutil dir;
+        const string dirGpsino = "GPSINO";
+        const string dirRutas = "rutas";
+
+
+        if (!fichName.empty()){
+            string unidad = fichName.substr(0,fichName.find_first_of(Constant::getFileSep()));
+            unidad += Constant::getFileSep();
+            //showMessage(string("se selecciona ") +unidad, 2000);
+            string pathRutas = unidad + dirGpsino;// + Constant::getFileSep() + dirRutas;
+            dir.createDir(pathRutas);
+            pathRutas += Constant::getFileSep() + dirRutas;
+            dir.createDir(pathRutas);
+            string code = casoPANTALLAPREGUNTA(Constant::toAnsiString("Renombrar el track"),
+                                               Constant::toAnsiString("Con qué nombre deseas que se guarde el track?"));
+            if (!code.empty()){
+                pathRutas += Constant::getFileSep() + code;
+                dir.createDir(pathRutas);
+                string dirGpxData = dir.getFolder(fileGPSData);
+                vector <FileProps> filelist;
+                dir.listarDirRecursivo(dirGpxData, &filelist, ".dat .565");
+                bool isDat, isPx;
+
+                for (int i=0; i < filelist.size(); i++){
+                    if (filelist.at(i).filetype == TIPOFICHERO){
+
+                        //Contiene la ruta de destino donde se escribirá el fichero
+                        string imgZoomDir = pathRutas +
+                             filelist.at(i).dir.substr(dirGpxData.length());
+
+    //                    Traza::print("imgZoomDir: " + imgZoomDir, W_DEBUG);
+                        if (!dir.existe(imgZoomDir)){
+                            dir.mkpath(imgZoomDir.c_str(), 0777);
+                        }
+
+                        string filenamedest = filelist.at(i).filename;
+                        isDat = filenamedest.find(".dat") != string::npos;
+                        isPx = filenamedest.find("_px.dat") != string::npos;
+
+                        //Renombramos para que lo lea bien el arduino
+                        if (isPx){
+                            size_t posIni = filenamedest.find("_simple_") + string("_simple_").length();
+                            size_t posFin = filenamedest.find_last_of("_");
+                            if(posIni != string::npos && posFin != string::npos){
+                                filenamedest = filenamedest.substr(posIni, posFin - posIni) + ".dat";
+                            }
+                        }
+                        //Copiamos el fichero al destino
+                        if (!isDat || isPx){
+                            dir.copyFile(filelist.at(i).dir + Constant::getFileSep()
+                                    + filelist.at(i).filename,
+                                     imgZoomDir + Constant::getFileSep()
+                                    + filenamedest);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return 0;
+}
+
+int Iofrontend::installMaps(tEvento *evento){
+
     return 0;
 }
 

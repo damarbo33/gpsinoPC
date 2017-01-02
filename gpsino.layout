@@ -2,34 +2,29 @@
 <CodeBlocks_layout_file>
 	<FileVersion major="1" minor="0" />
 	<ActiveTarget name="Debug" />
-	<File name="..\..\ExternalLibs\UIObjects\src\common\Ioutil.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="111003" topLine="2742" />
-		</Cursor>
-	</File>
 	<File name="..\..\ExternalLibs\UIObjects\src\common\Ioutil.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
 			<Cursor1 position="7368" topLine="145" />
 		</Cursor>
 	</File>
-	<File name="..\BmpRLE\image565.cpp" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="..\BmpRLE\image565.cpp" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="-2" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="19511" topLine="525" />
+			<Cursor1 position="10358" topLine="303" />
 		</Cursor>
 	</File>
-	<File name="..\BmpRLE\image565.h" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="..\BmpRLE\image565.h" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="-2" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="1855" topLine="54" />
+			<Cursor1 position="1855" topLine="44" />
 		</Cursor>
 	</File>
-	<File name="src\Icogestor.cpp" open="0" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\Icogestor.cpp" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="-3" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="3778" topLine="84" />
+			<Cursor1 position="3818" topLine="106" />
 		</Cursor>
 	</File>
-	<File name="src\Iofrontend.cpp" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\Iofrontend.cpp" open="1" top="1" tabpos="2" split="0" active="1" splitpos="0" zoom_1="-3" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="104835" topLine="2404" />
+			<Cursor1 position="7022" topLine="126" />
 		</Cursor>
 	</File>
 	<File name="src\gpx\GeoStructs.h" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -37,14 +32,14 @@
 			<Cursor1 position="3109" topLine="134" />
 		</Cursor>
 	</File>
-	<File name="src\gpx\geodrawer.cpp" open="1" top="1" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\gpx\geodrawer.cpp" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="-3" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="6503" topLine="171" />
+			<Cursor1 position="2305" topLine="384" />
 		</Cursor>
 	</File>
-	<File name="src\gpx\geodrawer.h" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\gpx\geodrawer.h" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="-2" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="12397" topLine="219" />
+			<Cursor1 position="4160" topLine="146" />
 		</Cursor>
 	</File>
 	<File name="src\gpx\gpxloader.cpp" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -52,7 +47,7 @@
 			<Cursor1 position="5081" topLine="9" />
 		</Cursor>
 	</File>
-	<File name="src\gpx\mercatorprojection.cpp" open="1" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\gpx\mercatorprojection.cpp" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="-2" zoom_2="0">
 		<Cursor>
 			<Cursor1 position="2337" topLine="52" />
 		</Cursor>
@@ -75,6 +70,11 @@
 	<File name="src\scrapper\scrapper.h" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
 			<Cursor1 position="705" topLine="4" />
+		</Cursor>
+	</File>
+	<File name="..\..\ExternalLibs\UIObjects\src\common\Ioutil.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="111003" topLine="2742" />
 		</Cursor>
 	</File>
 </CodeBlocks_layout_file>
