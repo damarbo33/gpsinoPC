@@ -139,7 +139,6 @@ class Iofrontend : public Ioutil{
         void loadFromFileToVector(string file, std::vector<std::string> *myVector);
         void pintarCapaTerreno(VELatLong *currentGPSPos);
         void showIcons();
-        int calcNumProcessedPoints(string fileOri, int zoomMeters, double anguloLimite);
         int openGpx(tEvento *evento);
         int downloadMaps(tEvento *evento);
         int chActionAround(tEvento *evento);

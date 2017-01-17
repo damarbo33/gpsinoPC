@@ -54,7 +54,7 @@
 	<fstream>
 	"Constant.h"
 
-1483370732 c:\github\externallibs\uiobjects\src\constant.h
+1484649344 c:\github\externallibs\uiobjects\src\constant.h
 	<fstream>
 	<sstream>
 	<string.h>
@@ -450,13 +450,13 @@
 	"SDL/SDL_image.h"
 	"SDL/SDL_rotozoom.h"
 
-1483371396 source:c:\github\proyectos\gpsinopc\src\iofrontend.cpp
+1484653974 source:c:\github\proyectos\gpsinopc\src\iofrontend.cpp
 	"Iofrontend.h"
 	"uilistgroup.h"
 	"beans/listgroupcol.h"
 	"uilistcommon.h"
 
-1483359759 c:\github\proyectos\gpsinopc\src\iofrontend.h
+1484653624 c:\github\proyectos\gpsinopc\src\iofrontend.h
 	<string>
 	<vector>
 	"common/Ioutil.h"

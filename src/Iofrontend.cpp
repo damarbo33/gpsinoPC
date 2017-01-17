@@ -1785,7 +1785,7 @@ void Iofrontend::drawMapArduino(tEvento *evento){
         actualCoordRelativeToImg.x += objPict->getX();
         actualCoordRelativeToImg.y += objPict->getY();
         pintarFlechaGPS(&actualCoordRelativeToImg, geoDrawer->calculaAnguloDireccion(&mapUtilPoint.latestCoord, &mapUtilPoint.actualCoord));
-        //mostrarDatosRuta(pendiente, distFromStart, eleActual, waypointText.c_str());
+        mostrarDatosRuta(pendiente, distFromStart, eleActual, waypointText.c_str());
 
         latestMinDist = minDist;
         mapUtilPoint.lastPointVisited = mapUtilPoint.latestPixelToDist;
@@ -1796,6 +1796,8 @@ void Iofrontend::drawMapArduino(tEvento *evento){
 *
 */
 void Iofrontend::mostrarDatosRuta(int pendiente, double distFromStart, double eleActual, const char *waypointText){
+    UIPicture *objPict = (UIPicture *)ObjectsMenu[PANTALLAGPSINO]->getObjByName("mapBox");
+
     //Calculamos la distancia visible por pantalla en km segun el zoom que
     //hagamos
 //    double maxDistScreenX = geoDrawer->calculaEscala();
@@ -1862,8 +1864,8 @@ void Iofrontend::mostrarDatosRuta(int pendiente, double distFromStart, double el
 
     if (drawWaypoints && strcmp(waypointText, "") != 0){
         //pintarLinea(0, getHeight() - 16, getWidth(), getHeight() - 16, cNegro);
-        drawRect(0,getHeight() - 15, getWidth(), 15, cNegro);
-        drawText(waypointText, 1, getHeight() - 15, cBlanco);
+        drawRect(objPict->getX(), objPict->getY() + objPict->getH() - 15, objPict->getW(), 15, cNegro);
+        drawText(waypointText, objPict->getX() + 1, objPict->getY() + objPict->getH() - 15, cBlanco);
     }
 
     for (int i=geoDrawer->getNumTopo(); i >= 0; i--){
@@ -1876,10 +1878,10 @@ void Iofrontend::mostrarDatosRuta(int pendiente, double distFromStart, double el
     }
 
 
-     drawRect(0,0,getWidth(), 14, cBlanco);
-     pintarLinea(0,14,getWidth(), 14, cNegro);
+     drawRect(objPict->getX(), objPict->getY(), objPict->getW(), 14, cBlanco);
+     pintarLinea(objPict->getX(), objPict->getY()  + 14, objPict->getX() + objPict->getW(), objPict->getY() + 14, cNegro);
 //     drawText(strTipoTopologia.c_str(), 2, 0, cRojo);
-     int x = 6, y = 0;
+     int x = objPict->getX() + 6, y = objPict->getY();
      if (tipoTopologia == CUMBRE){
         //fillTriangle(x,y,x-6,y+10,x+6,y+10, cNegro);
         pintarTriangulo(x,y,12,12,true, cNegro);
@@ -1895,21 +1897,21 @@ void Iofrontend::mostrarDatosRuta(int pendiente, double distFromStart, double el
 //     loadFont(FONTSIZE);
 
      x+=8;
-     drawText(Constant::TipoToStr(eleToCheckpoint).c_str(), x, 0, cRojo);
+     drawText(Constant::TipoToStr(eleToCheckpoint).c_str(), x, y, cRojo);
 
      x+=30;
-     drawText("a", x, 0, cNegro);
+     drawText("a", x, y, cNegro);
      x+=10;
-     drawText(Constant::TipoToStr(eleActual).c_str(), x, 0, cRojo);
+     drawText(Constant::TipoToStr(eleActual).c_str(), x, y, cRojo);
 
      x+=30;
-     drawText("d", x, 0, cNegro);
+     drawText("d", x, y, cNegro);
      x+=10;
-     drawText(Constant::TipoToStr(distToCheckpoint).c_str(), x, 0, cRojo);
+     drawText(Constant::TipoToStr(distToCheckpoint).c_str(), x, y, cRojo);
 
      //Dibujando el porcentaje
-     drawText(Constant::TipoToStr(pendiente).c_str(), x, 20, cRojo);
-     drawText("%", x+19, 20, cRojo);
+     drawText(Constant::TipoToStr(pendiente).c_str(), x, y + 20, cRojo);
+     drawText("%", x+19, y+20, cRojo);
 }
 
 /**
@@ -1966,7 +1968,6 @@ void Iofrontend::generarFicheroRuta(string fileOri, string fileDest, int zoomMet
     double longitud = 0.0;
 
     UIPicture *objPict = (UIPicture *)ObjectsMenu[PANTALLAGPSINO]->getObjByName("mapBox");
-	GeoDrawer *geoDrawerPos = new GeoDrawer(objPict->getW(), objPict->getH());
     GeoDrawer *geoDrawerAngulos = new GeoDrawer(objPict->getW(), objPict->getH());
 
     if (posiciones->size() > 0){
@@ -1975,40 +1976,30 @@ void Iofrontend::generarFicheroRuta(string fileOri, string fileDest, int zoomMet
         string processedFile;
         if (generatePixels){
             processedFile = dir.getFolder(fileOri) + FILE_SEPARATOR
-                        + dir.getFileNameNoExt(fileDest) + "_" + Constant::TipoToStr(zoomMeters) +  "_px.dat";
+                        + dir.getFileNameNoExt(fileDest) + "_"
+                        + Constant::TipoToStr(zoomMeters) +  "_px.dat";
         } else {
-            processedFile = dir.getFolder(fileOri) + FILE_SEPARATOR + dir.getFileNameNoExt(fileDest) + ".dat";
+            processedFile = dir.getFolder(fileOri) + FILE_SEPARATOR
+                        + dir.getFileNameNoExt(fileDest) + ".dat";
         }
 
-        ofstream myfile(processedFile.c_str());
+        ofstream myfile( (generatePixels ? processedFile + "_tmp" : processedFile).c_str());
         //Se calculan los limites aproximados que forman el area de la ruta
-        geoDrawerPos->calcLimites(posiciones);
         geoDrawer->calcLimites(posiciones);
         //La mayor precision se obtiene con el minimo zoom para calcular los angulos de las lineas
         //que unen cada punto
         geoDrawerAngulos->calcLimites(posiciones);
         //Se intenta hacer un zoom APROXIMADO en metros que abarque toda la pantalla
         geoDrawer->doGoogleZoom(zoomMeters);
-        geoDrawerPos->doGoogleZoom(zoomMeters);
         geoDrawerAngulos->doGoogleZoom(googleZoom[0]);
         //Obtenemos la primera posicion de la ruta y centramos en pantalla
         std::vector<std::string> strSplitted;
         strSplitted = Constant::split(posiciones->at(0),",");
-        latitud = geoDrawerPos->todouble(strSplitted.at(GPXLAT));
-        longitud = geoDrawerPos->todouble(strSplitted.at(GPXLON));
+        latitud = geoDrawer->todouble(strSplitted.at(GPXLAT));
+        longitud = geoDrawer->todouble(strSplitted.at(GPXLON));
 
-        geoDrawerPos->setPosicionCursor(latitud,longitud);
-        geoDrawerPos->centerScreen();
         geoDrawer->setPosicionCursor(latitud,longitud);
         geoDrawer->centerScreen();
-
-        if (generatePixels){
-            int numPoints = calcNumProcessedPoints(fileOri, zoomMeters, anguloLimite);
-            geoDrawer->setMapNumPoints(numPoints);
-            //cout << "numPoints: " << numPoints << endl;
-            //Creamos la cabecera de 3 lineas con datos importantes que evitaran procesos en arduino
-            crearCabecera(&myfile);
-        }
 
         //Creamos un fichero en base al indicado con todo el procesamiento de los puntos
         //de latitud y longitud, pero convertidos a coordenadas cartesianas x,y para poder
@@ -2025,22 +2016,23 @@ void Iofrontend::generarFicheroRuta(string fileOri, string fileDest, int zoomMet
         Point xy_2_t;  //Posicion anterior (-2) del pixel de la longitud y latitud
 
         double distanciaPuntos = 0.0;
+        unsigned long numPoints = 0;
 
         if (myfile.is_open()){
             for (int i = 0; i < posiciones->size(); i++){
                 strSplitted = Constant::split(posiciones->at(i),",");
                 if (strSplitted.size() >= 2){
                     //Almacenamos los datos actuales
-                    xy.geopos.setLatitude(geoDrawerPos->todouble(strSplitted.at(GPXLAT)));
-                    xy.geopos.setLongitude(geoDrawerPos->todouble(strSplitted.at(GPXLON)));
+                    xy.geopos.setLatitude(geoDrawer->todouble(strSplitted.at(GPXLAT)));
+                    xy.geopos.setLongitude(geoDrawer->todouble(strSplitted.at(GPXLON)));
                     xy.name = strSplitted.size() > GPXNAME ? strSplitted.at(GPXNAME) : "";
-                    xy.ele = strSplitted.size() > GPXALT ? geoDrawerPos->todouble(strSplitted.at(GPXALT)) : 0.0;
+                    xy.ele = strSplitted.size() > GPXALT ? geoDrawer->todouble(strSplitted.at(GPXALT)) : 0.0;
                     xy.time = strSplitted.size() > GPXTIME ? Constant::strToTipo<unsigned long>(strSplitted.at(GPXTIME)) : 0;
 
                     if (xy.geopos.getLatitude() != xy_1.geopos.getLatitude() && xy.geopos.getLongitude() != xy_1.geopos.getLongitude()){
                         //Convertimos la latitud y longitud
-                        geoDrawerPos->convertGeoToPixel(xy.geopos.getLatitude(),xy.geopos.getLongitude(),&xy.point);
-                        //Usamos el geoDrawerPos con la mayor precision para calcular los angulos
+                        geoDrawer->convertGeoToPixel(xy.geopos.getLatitude(),xy.geopos.getLongitude(),&xy.point);
+                        //Usamos el geoDrawerAngulos con la mayor precision para calcular los angulos
                         geoDrawerAngulos->convertGeoToPixel(xy.geopos.getLatitude(),xy.geopos.getLongitude(),&xy_t);
 
                         if (i > 0){
@@ -2069,6 +2061,7 @@ void Iofrontend::generarFicheroRuta(string fileOri, string fileDest, int zoomMet
                             //Regeneramos el track con los puntos simplificados si es necesario
                             if (generatePixels){
                                 anyadirPunto(&myfile, &xy_1);
+                                numPoints++;
                             } else {
                                 anyadirGeopos(&myfile, &xy_1);
                             }
@@ -2080,6 +2073,7 @@ void Iofrontend::generarFicheroRuta(string fileOri, string fileDest, int zoomMet
                             //cout << xy_t.x << "," << xy_1_t.x << "," << xy_t.y << "," << xy_1_t.y << endl;
                             if (generatePixels){
                                 anyadirPunto(&myfile, &xy_1);
+                                numPoints++;
                             } else {
                                 anyadirGeopos(&myfile, &xy_1);
                             }
@@ -2096,16 +2090,33 @@ void Iofrontend::generarFicheroRuta(string fileOri, string fileDest, int zoomMet
             //los 3 ultimos puntos dibujados. Por eso forzamos a pintar el ultimo punto
             if (generatePixels){
                 anyadirPunto(&myfile, &xy_1);
+                numPoints++;
             } else {
                 anyadirGeopos(&myfile, &xy_1);
             }
         }
         myfile.close();
-//        myfileBin.close();
-    }
 
+        //Los datos de resumen de la ruta deben estar al principio, por lo que tenemos que
+        //regenerar el fichero con los datos de la cabecera en primer lugar y concatenando
+        //los datos de posicionamiento
+        if (generatePixels){
+            Dirutil dir;
+            dir.borrarArchivo(processedFile);
+            geoDrawer->setMapNumPoints(numPoints);
+            std::ifstream  src((processedFile + "_tmp").c_str());
+            //Primero creamos el fichero con la cabecera
+            std::ofstream  dst(processedFile.c_str(), std::ios::app);
+            //Creamos la cabecera de 3 lineas con datos importantes que evitaran procesos en arduino
+            crearCabecera(&dst);
+            //Y anyadimos el contenido de los puntos creados en el temporal
+            dst << src.rdbuf();
+            dst.close();
+            src.close();
+            dir.borrarArchivo(processedFile + "_tmp");
+        }
+    }
     delete geoDrawerAngulos;
-	delete geoDrawerPos;
 }
 
 /**
@@ -2150,7 +2161,7 @@ double Iofrontend::calculaAnguloTrackpoint(Point *xy1, Point *xy0, Point *xy2){
 *
 */
 void Iofrontend::anyadirPunto(ofstream *myfile, PosMapa *xy){
-    *myfile << std::setprecision(0)  << xy->point.x << "," << xy->point.y            /*Posicion xy en pixels del punto gps*/
+    *myfile << std::setprecision(0) << std::fixed << xy->point.x << "," << xy->point.y            /*Posicion xy en pixels del punto gps*/
     << "," << xy->ele   /*Altura*/
     << "," << xy->time /*tiempo en segundos*/
     << "," << Constant::TipoToStr(ceil(GeoStructs::toDegrees(xy->angle)))
@@ -2471,7 +2482,7 @@ void Iofrontend::drawTile(VELatLong *currentLatLon, int zoom, int sideTileX, int
             for (int j=inicioY; j < finy; j++){
                 Uint8 r,g,b;
 
-                SDL_GetRGB(getpixel(optimizedImage, i, j), optimizedImage->format,&r,&g,&b);
+//                SDL_GetRGB(getpixel(optimizedImage, i, j), optimizedImage->format,&r,&g,&b);
 
 //                putpixelSafe(objPict->getImgGestor()->getSurface(), i + newPos.x + desplazaX, j + newPos.y + desplazaY,
 //                             SDL_MapRGB(optimizedImage->format,
@@ -2479,9 +2490,7 @@ void Iofrontend::drawTile(VELatLong *currentLatLon, int zoom, int sideTileX, int
 //                                        g > umbral.g ? 0xFF : 0,
 //                                        b > umbral.b ? 0xFF : 0));
 
-//                putpixelSafe(objPict->getImgGestor()->getSurface(), i + newPos.x + desplazaX, j + newPos.y + desplazaY,
-//                             getpixel(optimizedImage, i, j));
-                    putpixelSafe(objPict->getImgGestor()->getSurface(), i + newPos.x + desplazaX, j + newPos.y + desplazaY,
+                putpixelSafe(objPict->getImgGestor()->getSurface(), i + newPos.x + desplazaX, j + newPos.y + desplazaY,
                              getpixel(optimizedImage, i, j));
             }
         }
@@ -2498,127 +2507,6 @@ void Iofrontend::drawTile(VELatLong *currentLatLon, int zoom, int sideTileX, int
     }
 }
 
-/**
-* Cualquier punto que supere el angulo, no sera tenido en cuenta
-*/
-int Iofrontend::calcNumProcessedPoints(string fileOri, int zoomMeters, double anguloLimite){
-    int nProcessedPoints = 0;
-
-    if (posiciones != NULL) delete posiciones;
-    posiciones = new std::vector<std::string>();
-    loadFromFileToVector(fileOri, posiciones);
-
-    double latitud = 0.0;
-    double longitud = 0.0;
-	GeoDrawer *geoDrawerPos = new GeoDrawer(getWidth(), getHeight());
-    GeoDrawer *geoDrawerAngulos = new GeoDrawer(getWidth(), getHeight());
-
-    if (posiciones->size() > 0){
-        Dirutil dir;
-        //Creamos el fichero con todos los puntos
-        //Se calculan los limites aproximados que forman el area de la ruta
-        geoDrawerPos->calcLimites(posiciones);
-        geoDrawer->calcLimites(posiciones);
-        //La mayor precision se obtiene con el minimo zoom para calcular los angulos de las lineas
-        //que unen cada punto
-        geoDrawerAngulos->calcLimites(posiciones);
-        //Se intenta hacer un zoom APROXIMADO en metros que abarque toda la pantalla
-
-        geoDrawer->doGoogleZoom(zoomMeters);
-        geoDrawerPos->doGoogleZoom(zoomMeters);
-        geoDrawerAngulos->doGoogleZoom(googleZoom[0]);
-
-
-        //Obtenemos la primera posicion de la ruta y centramos en pantalla
-        std::vector<std::string> strSplitted;
-        strSplitted = Constant::split(posiciones->at(0),",");
-        latitud = geoDrawerPos->todouble(strSplitted.at(GPXLAT));
-        longitud = geoDrawerPos->todouble(strSplitted.at(GPXLON));
-
-        geoDrawerPos->setPosicionCursor(latitud,longitud);
-        geoDrawerPos->centerScreen();
-
-        geoDrawer->setPosicionCursor(latitud,longitud);
-        geoDrawer->centerScreen();
-
-        //Creamos un fichero en base al indicado con todo el procesamiento de los puntos
-        //de latitud y longitud, pero convertidos a coordenadas cartesianas x,y para poder
-        //dibujarlos en pantalla. (Convertimos a pixels)
-        string linea = "";
-
-        PosMapa xy;    //Posicion actual en longitud y latitud
-        PosMapa xy_1;  //Posicion anterior (-1) en longitud y latitud
-        PosMapa xy_2;  //Posicion anterior (-2) en longitud y latitud
-        double angulo = 0.0;
-
-        Point xy_t;    //Posicion actual del pixel de la longitud y latitud
-        Point xy_1_t;  //Posicion anterior (-1) del pixel de la longitud y latitud
-        Point xy_2_t;  //Posicion anterior (-2) del pixel de la longitud y latitud
-
-        double distanciaPuntos = 0.0;
-
-        for (int i = 0; i < posiciones->size(); i++){
-            strSplitted = Constant::split(posiciones->at(i),",");
-            if (strSplitted.size() >= 2){
-                //Almacenamos los datos actuales
-                xy.geopos.setLatitude(geoDrawerPos->todouble(strSplitted.at(GPXLAT)));
-                xy.geopos.setLongitude(geoDrawerPos->todouble(strSplitted.at(GPXLON)));
-                xy.name = strSplitted.size() > GPXNAME ? strSplitted.at(GPXNAME) : "";
-                xy.ele = strSplitted.size() > GPXALT ? geoDrawerPos->todouble(strSplitted.at(GPXALT)) : 0.0;
-                xy.time = strSplitted.size() > GPXTIME ? Constant::strToTipo<unsigned long>(strSplitted.at(GPXTIME)) : 0;
-
-                if (xy.geopos.getLatitude() != xy_1.geopos.getLatitude() && xy.geopos.getLongitude() != xy_1.geopos.getLongitude()){
-                    //Convertimos la latitud y longitud
-                    geoDrawerPos->convertGeoToPixel(xy.geopos.getLatitude(),xy.geopos.getLongitude(),&xy.point);
-                    //Usamos el geoDrawerPos con la mayor precision para calcular los angulos
-                    geoDrawerAngulos->convertGeoToPixel(xy.geopos.getLatitude(),xy.geopos.getLongitude(),&xy_t);
-
-                    if (i > 0){
-                        //Calculamos la distancia con el punto anterior
-                        distanciaPuntos = fabs(GeoDrawer::getDistance(xy_1.geopos.getLatitude(), xy_1.geopos.getLongitude(),
-                                                    xy.geopos.getLatitude(), xy.geopos.getLongitude())) * 1000; // en metros
-
-                        //Para saber la distancia sin hacer calculos
-                        xy.distancia = (xy_1.distancia + distanciaPuntos);
-                    }
-
-                    //Dados 3 puntos, calculamos el angulo que forman los vectores, cuyo vertice comun es xy_1
-                    //Con este angulo podremos calcular si hay una desviacion en la ruta y simplificarla o utilizar
-                    //este dato para avisar al usuario de que hay un cambio de direccion
-                    if (i > 1){
-                        angulo = calculaAnguloTrackpoint(&xy_2_t, &xy_1_t, &xy_t);
-                        //El angulo se calcula con el vertice que forma xy_1
-                        xy_1.angle = angulo;
-                    }
-
-                    //Tenemos varias opciones segun los parametros: Generar track con todos los puntos originales,
-                    //generar track con los puntos simplificados con puntos (x, y) o (lat, lon)
-                    if (i > 0 && anguloLimite == 0.0){
-                        //Tenemos que esperarnos una iteracion para poder pintar el punto. Se hace de esta forma para
-                        //poder tener el dato del angulo que forman 3 puntos consecutivos (2 vectores)
-                        //Regeneramos el track con los puntos simplificados si es necesario
-                            nProcessedPoints++;
-
-                    } else if ( ( !(i > 2 && angulo == 0.0 && xy_2.angle == 0)
-                            && (angulo < anguloLimite && i > 1) || i == 1)
-                            && ((int)xy.point.x != (int)xy_1.point.x && (int)xy.point.y != (int)xy_1.point.y)
-                            || !xy_1.name.empty()){
-                            nProcessedPoints++;
-                    }
-                    xy_2 = xy_1;
-                    xy_1 = xy;
-                    xy_2_t = xy_1_t;
-                    xy_1_t = xy_t;
-                }
-            }
-        }
-        nProcessedPoints++;
-    }
-
-    delete geoDrawerAngulos;
-	delete geoDrawerPos;
-    return nProcessedPoints;
-}
 /**
 *
 */
@@ -2782,16 +2670,15 @@ void Iofrontend::plotLineWidth(int x0, int y0, int x1, int y1, int wd, t_color c
    int err = dx-dy, e2, x2, y2;                          /* error value e_xy */
    float ed = dx+dy == 0 ? 1 : sqrt((float)dx*dx+(float)dy*dy);
 
-//   uint32_t pixColor = SDL_MapRGB(surface->format, color.r, color.g, color.b);
-
     for (wd = (wd+1)/2; ; ) {  /* pixel loop */
 //        putpixelSafe(surface,x0, y0, pixColor);
         gestorIconos->drawIcono(trackSeg, surface, x0, y0);
+
         e2 = err; x2 = x0;
         if (2*e2 >= -dx) {                                           /* x step */
              for (e2 += dy, y2 = y0; e2 < ed*wd && (y1 != y2 || dx > dy); e2 += dx){
 //                        putpixelSafe(surface,x0, y2 += sy, pixColor );
-                gestorIconos->drawIcono(trackSeg, surface, x0, y2 += sy);
+                    gestorIconos->drawIcono(trackSeg, surface, x0, y2 += sy);
              }
 
             if (x0 == x1) break;
@@ -2801,12 +2688,13 @@ void Iofrontend::plotLineWidth(int x0, int y0, int x1, int y1, int wd, t_color c
         if (2*e2 <= dy) {                                            /* y step */
              for (e2 = dx-e2; e2 < ed*wd && (x1 != x2 || dx < dy); e2 += dy){
 //                        putpixelSafe(surface,x2 += sx, y0, pixColor );
-                gestorIconos->drawIcono(trackSeg, surface, x2 += sx, y0);
+                    gestorIconos->drawIcono(trackSeg, surface, x2 += sx, y0);
              }
-
             if (y0 == y1) break;
             err += dx; y0 += sy;
         }
+
+
     }
 }
 
