@@ -24,7 +24,6 @@
 #include "uiprogressbar.h"
 #include "uipopupmenu.h"
 #include "servers/dropbox.h"
-#include "AudioPlayer.h"
 #include "scrapper/scrapper.h"
 #include "gpx/GeoStructs.h"
 #include "gpx/geodrawer.h"

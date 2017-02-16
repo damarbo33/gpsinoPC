@@ -87,7 +87,7 @@ void Iofrontend::initUIObjs(){
     ObjectsMenu[PANTALLACONFIRMAR]->add("btnNoConfirma", GUIBUTTON, (BUTTONW/2 + 5), 30,BUTTONW,BUTTONH, "Cancelar", true)->setIcon(cross);
 
     UITextElementsArea *infoTextRom = (UITextElementsArea *)ObjectsMenu[PANTALLACONFIRMAR]->getObjByName("textosBox");
-    t_posicion pos = {0,0,0,0};
+    t_posicion pos(0,0,0,0);
     infoTextRom->addField("labelDetalle","","",pos, true);
     infoTextRom->setTextColor(cBlanco);
     infoTextRom->setColor(cNegro);

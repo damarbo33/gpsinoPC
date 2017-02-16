@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="100">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <logicalFolder name="HeaderFiles"
+                   displayName="Header Files"
+                   projectFiles="true">
+    </logicalFolder>
+    <logicalFolder name="ResourceFiles"
+                   displayName="Resource Files"
+                   projectFiles="true">
+    </logicalFolder>
+    <logicalFolder name="SourceFiles"
+                   displayName="Source Files"
+                   projectFiles="true">
+      <logicalFolder name="src" displayName="src" projectFiles="true">
+        <logicalFolder name="gpx" displayName="gpx" projectFiles="true">
+          <itemPath>../src/gpx/geodrawer.cpp</itemPath>
+          <itemPath>../src/gpx/gpxloader.cpp</itemPath>
+          <itemPath>../src/gpx/mercatorprojection.cpp</itemPath>
+        </logicalFolder>
+        <logicalFolder name="scrapper" displayName="scrapper" projectFiles="true">
+          <itemPath>../src/scrapper/scrapper.cpp</itemPath>
+        </logicalFolder>
+        <itemPath>../src/Icogestor.cpp</itemPath>
+        <itemPath>../src/Iofrontend.cpp</itemPath>
+        <itemPath>../src/main.cpp</itemPath>
+      </logicalFolder>
+      <itemPath>../../../ExternalLibs/crosslib/src/uiobjects/common/Ioutil.cpp</itemPath>
+      <itemPath>../../../ExternalLibs/crosslib/src/uiobjects/common/Ioutil.h</itemPath>
+      <itemPath>../../BmpRLE/image565.cpp</itemPath>
+      <itemPath>../../BmpRLE/image565.h</itemPath>
+    </logicalFolder>
+    <logicalFolder name="TestFiles"
+                   displayName="Test Files"
+                   projectFiles="false"
+                   kind="TEST_LOGICAL_FOLDER">
+    </logicalFolder>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false"
+                   kind="IMPORTANT_FILES_FOLDER">
+      <itemPath>Makefile</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <sourceRootList>
+    <Elem>../src</Elem>
+  </sourceRootList>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Debug" type="1">
+      <toolsSet>
+        <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
+      </toolsSet>
+      <compileType>
+        <cTool>
+          <incDir>
+            <pElem>../../../ExternalLibs/SDL/libs/include</pElem>
+            <pElem>../../../ExternalLibs/SDL/libs/include/SDL</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/ziputils/zlib</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/uiobjects</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/sqllite</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/libjpeg</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/ziputils/unzip</pElem>
+            <pElem>../../../ExternalLibs/curl-7.40.0-devel-mingw32/include</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/tidy/include</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/tidy/src</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/gumbo-parser-master/src</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/httpcurl</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/httpcurl/jsoncpp-0.10.5/include</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/rijndael</pElem>
+            <pElem>../../BmpRLE</pElem>
+            <pElem>../src</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>WIN</Elem>
+            <Elem>WIN32</Elem>
+          </preprocessorList>
+        </cTool>
+        <ccTool>
+          <incDir>
+            <pElem>../../../ExternalLibs/SDL/libs/include</pElem>
+            <pElem>../../../ExternalLibs/SDL/libs/include/SDL</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/ziputils/zlib</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/uiobjects</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/sqllite</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/libjpeg</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/ziputils/unzip</pElem>
+            <pElem>../../../ExternalLibs/curl-7.40.0-devel-mingw32/include</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/tidy/include</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/tidy/src</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/gumbo-parser-master/src</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/httpcurl</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/httpcurl/jsoncpp-0.10.5/include</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/rijndael</pElem>
+            <pElem>../../BmpRLE</pElem>
+            <pElem>../src</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>WIN</Elem>
+            <Elem>WIN32</Elem>
+          </preprocessorList>
+        </ccTool>
+        <linkerTool>
+          <linkerAddLib>
+            <pElem>../../../ExternalLibs/crosslib/crosslib/dist/Debug/MinGW32-Windows</pElem>
+            <pElem>../../../ExternalLibs/curl-7.40.0-devel-mingw32/lib</pElem>
+            <pElem>../../../ExternalLibs/SDL/libs/lib</pElem>
+            <pElem>../../../ExternalLibs/SDL/libs/lib/x86</pElem>
+          </linkerAddLib>
+          <linkerLibItems>
+            <linkerLibLibItem>crosslib</linkerLibLibItem>
+            <linkerOptionItem>-lsdlgfx -lmingw32 -lSDLmain -lSDL -lSDL_mixer -lSDL_ttf -lSDL_image -lcrypto -lcurl -lcurldll -lidn -lrtmp -lssh2 -lssh2dll -lssl -lz -lzdll -lws2_32 </linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
+      </compileType>
+      <item path="../../../ExternalLibs/crosslib/src/uiobjects/common/Ioutil.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../ExternalLibs/crosslib/src/uiobjects/common/Ioutil.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../BmpRLE/image565.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../BmpRLE/image565.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../src/Icogestor.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../src/Iofrontend.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../src/gpx/geodrawer.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../src/gpx/gpxloader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../src/gpx/mercatorprojection.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../src/main.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../src/scrapper/scrapper.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+    </conf>
+    <conf name="Release" type="1">
+      <toolsSet>
+        <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
+      </toolsSet>
+      <compileType>
+        <cTool>
+          <developmentMode>5</developmentMode>
+          <incDir>
+            <pElem>../../../ExternalLibs/SDL/libs/include</pElem>
+            <pElem>../../../ExternalLibs/SDL/libs/include/SDL</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/ziputils/zlib</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/uiobjects</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/sqllite</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/libjpeg</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/ziputils/unzip</pElem>
+            <pElem>../../../ExternalLibs/curl-7.40.0-devel-mingw32/include</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/tidy/include</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/tidy/src</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/gumbo-parser-master/src</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/httpcurl</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/httpcurl/jsoncpp-0.10.5/include</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/rijndael</pElem>
+            <pElem>../../BmpRLE</pElem>
+            <pElem>../src</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>WIN</Elem>
+            <Elem>WIN32</Elem>
+          </preprocessorList>
+        </cTool>
+        <ccTool>
+          <developmentMode>5</developmentMode>
+          <incDir>
+            <pElem>../../../ExternalLibs/SDL/libs/include</pElem>
+            <pElem>../../../ExternalLibs/SDL/libs/include/SDL</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/ziputils/zlib</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/uiobjects</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/sqllite</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/libjpeg</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/ziputils/unzip</pElem>
+            <pElem>../../../ExternalLibs/curl-7.40.0-devel-mingw32/include</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/tidy/include</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/tidy/src</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/gumbo-parser-master/src</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/httpcurl</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/httpcurl/jsoncpp-0.10.5/include</pElem>
+            <pElem>../../../ExternalLibs/crosslib/src/rijndael</pElem>
+            <pElem>../../BmpRLE</pElem>
+            <pElem>../src</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>WIN</Elem>
+            <Elem>WIN32</Elem>
+          </preprocessorList>
+        </ccTool>
+        <fortranCompilerTool>
+          <developmentMode>5</developmentMode>
+        </fortranCompilerTool>
+        <asmTool>
+          <developmentMode>5</developmentMode>
+        </asmTool>
+        <linkerTool>
+          <linkerAddLib>
+            <pElem>../../../ExternalLibs/crosslib/crosslib/dist/Release/MinGW32-Windows</pElem>
+            <pElem>../../../ExternalLibs/curl-7.40.0-devel-mingw32/lib</pElem>
+            <pElem>../../../ExternalLibs/SDL/libs/lib</pElem>
+            <pElem>../../../ExternalLibs/SDL/libs/lib/x86</pElem>
+          </linkerAddLib>
+          <linkerLibItems>
+            <linkerLibLibItem>crosslib</linkerLibLibItem>
+            <linkerOptionItem>-lsdlgfx -lmingw32 -lSDLmain -lSDL -lSDL_mixer -lSDL_ttf -lSDL_image -lcrypto -lcurl -lcurldll -lidn -lrtmp -lssh2 -lssh2dll -lssl -lz -lzdll -lws2_32 </linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
+      </compileType>
+      <item path="../../../ExternalLibs/crosslib/src/uiobjects/common/Ioutil.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../ExternalLibs/crosslib/src/uiobjects/common/Ioutil.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../BmpRLE/image565.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../BmpRLE/image565.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../src/Icogestor.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../src/Iofrontend.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../src/gpx/geodrawer.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../src/gpx/gpxloader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../src/gpx/mercatorprojection.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../src/main.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../src/scrapper/scrapper.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+    </conf>
+  </confs>
+</configurationDescriptor>
