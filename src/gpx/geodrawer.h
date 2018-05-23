@@ -53,7 +53,7 @@ using namespace std;
     static const int maxPendientePermitida = 100;  //En senderismo es posible pendientes del 100 o mayores. Pero establecemos este limite para evitar problemas con gps
     static const int limitePendienteLlano = 3;     //Establecemos que una pendiente menor al 3% es terreno llano
     static const float margenPendiente = 0.05;     //En porcentaje 0.05 = 5% para medir cambios de tendencias en ascension o descenso
-    static const float limiteVelocidadMin = 0.15;     //En porcentaje 0.9 = 90% para no contar velocidades demasiado pequeñas en relacion a la distancia recorrida
+    static const float limiteVelocidadMin = 0.15;     //En porcentaje 0.9 = 90% para no contar velocidades demasiado pequeï¿½as en relacion a la distancia recorrida
     static const double minDiffAltToCumbres = 20.0;
 
 
@@ -220,6 +220,7 @@ class GeoDrawer
         void setMapOffsetX(int var){mapOffsetX = var;}
         void setMapOffsetY(int var){mapOffsetY = var;}
         void setZoomLevel(int var){zoomLevel = var;}
+        int getZoomLevel(){return zoomLevel;}
         int getZoomMeters(){return googleZoom[zoomLevel];}
         void incZoomLevel(){ zoomLevel = (zoomLevel + 1) % (sizeof(googleZoom)/sizeof(int));}
         void decZoomLevel(){ if (zoomLevel > 0) zoomLevel = zoomLevel - 1; }

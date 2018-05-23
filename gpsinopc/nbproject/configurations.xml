@@ -56,14 +56,11 @@
       <compileType>
         <cTool>
           <incDir>
-            <pElem>../../../ExternalLibs/SDL/libs/include</pElem>
-            <pElem>../../../ExternalLibs/SDL/libs/include/SDL</pElem>
             <pElem>../../../ExternalLibs/crosslib/src/ziputils/zlib</pElem>
             <pElem>../../../ExternalLibs/crosslib/src/uiobjects</pElem>
             <pElem>../../../ExternalLibs/crosslib/src/sqllite</pElem>
             <pElem>../../../ExternalLibs/crosslib/src/libjpeg</pElem>
             <pElem>../../../ExternalLibs/crosslib/src/ziputils/unzip</pElem>
-            <pElem>../../../ExternalLibs/curl-7.40.0-devel-mingw32/include</pElem>
             <pElem>../../../ExternalLibs/crosslib/src/tidy/include</pElem>
             <pElem>../../../ExternalLibs/crosslib/src/tidy/src</pElem>
             <pElem>../../../ExternalLibs/crosslib/src/gumbo-parser-master/src</pElem>
@@ -80,14 +77,11 @@
         </cTool>
         <ccTool>
           <incDir>
-            <pElem>../../../ExternalLibs/SDL/libs/include</pElem>
-            <pElem>../../../ExternalLibs/SDL/libs/include/SDL</pElem>
             <pElem>../../../ExternalLibs/crosslib/src/ziputils/zlib</pElem>
             <pElem>../../../ExternalLibs/crosslib/src/uiobjects</pElem>
             <pElem>../../../ExternalLibs/crosslib/src/sqllite</pElem>
             <pElem>../../../ExternalLibs/crosslib/src/libjpeg</pElem>
             <pElem>../../../ExternalLibs/crosslib/src/ziputils/unzip</pElem>
-            <pElem>../../../ExternalLibs/curl-7.40.0-devel-mingw32/include</pElem>
             <pElem>../../../ExternalLibs/crosslib/src/tidy/include</pElem>
             <pElem>../../../ExternalLibs/crosslib/src/tidy/src</pElem>
             <pElem>../../../ExternalLibs/crosslib/src/gumbo-parser-master/src</pElem>
@@ -101,17 +95,16 @@
             <Elem>WIN</Elem>
             <Elem>WIN32</Elem>
           </preprocessorList>
+          <warningLevel>0</warningLevel>
         </ccTool>
         <linkerTool>
           <linkerAddLib>
-            <pElem>../../../ExternalLibs/crosslib/crosslib/dist/Debug/MinGW32-Windows</pElem>
             <pElem>../../../ExternalLibs/curl-7.40.0-devel-mingw32/lib</pElem>
-            <pElem>../../../ExternalLibs/SDL/libs/lib</pElem>
-            <pElem>../../../ExternalLibs/SDL/libs/lib/x86</pElem>
+            <pElem>../../../ExternalLibs/crosslib/crosslib/dist/Debug2/MinGW2_64-Windows</pElem>
           </linkerAddLib>
           <linkerLibItems>
             <linkerLibLibItem>crosslib</linkerLibLibItem>
-            <linkerOptionItem>-lsdlgfx -lmingw32 -lSDLmain -lSDL -lSDL_mixer -lSDL_ttf -lSDL_image -lcrypto -lcurl -lcurldll -lidn -lrtmp -lssh2 -lssh2dll -lssl -lz -lzdll -lws2_32 </linkerOptionItem>
+            <linkerOptionItem>-lsdl_gfx -lmingw32 -lSDLmain -lSDL -lSDL_mixer -lSDL_ttf -lSDL_image -lcurl -lws2_32 </linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>

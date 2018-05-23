@@ -16,7 +16,7 @@ Scrapper::~Scrapper(){
 /**
 *
 */
-DWORD Scrapper::downImgRoute(){
+uint32_t Scrapper::downImgRoute(){
     GpxLoader loader;
     Dirutil dir;
     string dataGPS;

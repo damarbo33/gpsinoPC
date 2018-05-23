@@ -134,7 +134,7 @@ class Iofrontend : public Ioutil{
         void anyadirPunto(ofstream *myfile, PosMapa *xy);
         void anyadirGeopos(ofstream *myfile, PosMapa *posmapa);
         void crearCabecera(ofstream *myfile);
-        void cargarFicheroRuta(string file, int zoomMeters);
+        int cargarFicheroRuta(string file, int zoomMeters);
         void loadFromFileToVector(string file, std::vector<std::string> *myVector);
         void pintarCapaTerreno(VELatLong *currentGPSPos);
         void showIcons();

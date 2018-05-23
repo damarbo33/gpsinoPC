@@ -22,8 +22,8 @@ class Scrapper
         t_downMapData getDownMapData(){return in;}
         void setObjectsMenu(tmenu_gestor_objects *var){ObjectsMenu = var;}
 
-        DWORD getLyricsSong();
-        DWORD downImgRoute();
+        uint32_t getLyricsSong();
+        uint32_t downImgRoute();
 
     protected:
 

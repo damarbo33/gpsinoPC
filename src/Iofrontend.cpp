@@ -87,8 +87,16 @@ void Iofrontend::initUIObjs(){
     ObjectsMenu[PANTALLACONFIRMAR]->add("btnNoConfirma", GUIBUTTON, (BUTTONW/2 + 5), 30,BUTTONW,BUTTONH, "Cancelar", true)->setIcon(cross);
 
     UITextElementsArea *infoTextRom = (UITextElementsArea *)ObjectsMenu[PANTALLACONFIRMAR]->getObjByName("textosBox");
+    
+    TextElement detalleElement;
+
+    
+    
     t_posicion pos(0,0,0,0);
-    infoTextRom->addField("labelDetalle","","",pos, true);
+    detalleElement.setName("labelDetalle");
+    detalleElement.setUseMaxLabelMargin(true);
+    detalleElement.setPos(pos);
+    infoTextRom->addField(&detalleElement);
     infoTextRom->setTextColor(cBlanco);
     infoTextRom->setColor(cNegro);
 
@@ -618,7 +626,7 @@ void Iofrontend::setDinamicSizeObjects(){
         ObjectsMenu[PANTALLABROWSER2]->getObjByName(ARTDIRBROWSER)->setTam( 0, 0, this->getWidth(), Constant::getINPUTH());
         int mapPosY = Constant::getINPUTH()*3 + 25 * 2;
 
-        //ObjectsMenu[PANTALLAGPSINO]->getObjByName("mapBox")->setTam(2, mapPosY, getWidth(), getHeight() - 20 - mapPosY - 5);
+        ObjectsMenu[PANTALLAGPSINO]->getObjByName("mapBox")->setTam(2, mapPosY, getWidth(), getHeight() - 20 - mapPosY - 5);
         ObjectsMenu[PANTALLAGPSINO]->getObjByName("progDownload")->setTam( 0, getHeight() - 20, getWidth(), 20);
 
     } catch (Excepcion &e){
@@ -1620,13 +1628,25 @@ void Iofrontend::drawMapArduino(tEvento *evento){
             }
 
             if (evento->isKey && evento->key == SDLK_a){
-                geoDrawer->incZoomLevel();
-                //Cargamos la ruta de nuevo con la informacion de pixels precalculada para la ruta
-                cargarFicheroRuta(fileGPSData, geoDrawer->getZoomMeters());
+                
+                int res = 0;
+                //If we don't find the maps for the zoom, we try to find some other
+                //zooms until we arrive finally to the same level of zoom or find 
+                //some
+                int iniZoom = geoDrawer->getZoomLevel();
+                do{
+                    geoDrawer->incZoomLevel();
+                    //Cargamos la ruta de nuevo con la informacion de pixels precalculada para la ruta
+                    cout << "Buscando con el zoom " <<  geoDrawer->getZoomMeters() << endl;
+                    res = cargarFicheroRuta(fileGPSData, geoDrawer->getZoomMeters());
+                    cout << ", resultado: " << res << endl;
+                } while (res == 1 && iniZoom != geoDrawer->getZoomLevel());
+                
                 fclose(fp);
                 processedFile = dir.getFolder(fileGPSData) + FILE_SEPARATOR
                                 + dir.getFileNameNoExt(fileGPSData) + "_" + Constant::TipoToStr(geoDrawer->getZoomMeters()) +  "_px.dat";
                 fp = fopen(processedFile.c_str(), "r");
+                
 
             } else if (evento->isKey && (evento->key == SDLK_d || evento->key == SDLK_s)) {
                 //Evitamos overflow si sobrepasamos el tamanyo del track
@@ -1960,7 +1980,10 @@ void Iofrontend::pintarFlechaGPS(Point *punto, double rotacion){
 * Cualquier punto que supere el angulo, no sera tenido en cuenta
 */
 void Iofrontend::generarFicheroRuta(string fileOri, string fileDest, int zoomMeters, double anguloLimite, bool generatePixels){
-    if (posiciones != NULL) delete posiciones;
+    if (posiciones != NULL) {
+        delete posiciones;
+        posiciones = NULL;
+    }
     posiciones = new std::vector<std::string>();
     loadFromFileToVector(fileOri, posiciones);
 
@@ -2220,10 +2243,13 @@ void Iofrontend::crearCabecera(ofstream *myfile){
 /**
 *
 */
-void Iofrontend::cargarFicheroRuta(string file, int zoomMeters){
+int Iofrontend::cargarFicheroRuta(string file, int zoomMeters){
     try{
-        if (listaPixels != NULL)
+        if (listaPixels != NULL){
             delete listaPixels;
+            listaPixels = NULL;
+        }
+            
 
         fileGPSData = file;
         Dirutil dir;
@@ -2235,11 +2261,14 @@ void Iofrontend::cargarFicheroRuta(string file, int zoomMeters){
         cout << "Abriendo fichero con los puntos del mapa: " <<  processedFile;
         cout << " con un tamanyo de: " << ficheroProcesado.size() << " puntos" << endl;
 
-        if (ficheroProcesado.size() == 0) return;
+        if (ficheroProcesado.size() == 0) return 1;
 
         /**Cargamos las posiciones solo para ejemplo de simulacion de puntos gps al pulsar la tecla d**/
-        if (posiciones != NULL)
+        if (posiciones != NULL){
             delete posiciones;
+            posiciones = NULL;
+        }
+            
 
         posiciones = new std::vector<std::string>();
         loadFromFileToVector(file, posiciones);
@@ -2322,9 +2351,11 @@ void Iofrontend::cargarFicheroRuta(string file, int zoomMeters){
             }
         }
         cout << "listaPixels cargado con " << listaPixels->size() << " elementos" << endl;
+        return 0;
     } catch (Excepcion &e){
         Traza::print("Error al cargar la configuracion", W_ERROR);
         cout << "ERROR ENCONTRADO" << e.getMessage() << endl;
+        return 1;
     }
 }
 
