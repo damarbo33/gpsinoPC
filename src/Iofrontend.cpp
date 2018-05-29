@@ -1313,7 +1313,7 @@ int Iofrontend::downloadMaps(tEvento *evento){
             showMessage("Debe cargar un fichero gpx valido", 3000);
         } else {
             t_downMapData in;
-            in.server = OPENCYCLEMAP;
+            in.server = OPENSTREETMAP;
             in.dirImgDown = dir.getFolder(fileGPSData);
             in.fileGpx = fileGPX;
             in.calcNTiles = true;
@@ -1432,7 +1432,14 @@ void Iofrontend::analyzeGpx(string ruta){
     Traza::print("Iofrontend::analyzeGpx. Guardando fichero", W_INFO);
     //Para generar unos puntos de ejemplo a seguir pulsando la tecla d
     generarFicheroRuta(dataGPS, fileNameSimple, googleZoom[0], 0.0, false);
-
+    
+    /*BETA: Calculation of mileage per day taking in consideration the amount of 
+     * effort that must be made
+     */
+    if (this->posiciones->size() > 0){
+        geoDrawer->calcEtapas(this->posiciones);
+    }
+    
     Traza::print("Iofrontend::analyzeGpx. Cargando ruta", W_INFO);
     /**Para cargar la ruta*/
     cargarFicheroRuta(fileNameSimple, geoDrawer->getZoomMeters());
@@ -2009,6 +2016,7 @@ void Iofrontend::generarFicheroRuta(string fileOri, string fileDest, int zoomMet
         ofstream myfile( (generatePixels ? processedFile + "_tmp" : processedFile).c_str());
         //Se calculan los limites aproximados que forman el area de la ruta
         geoDrawer->calcLimites(posiciones);
+
         //La mayor precision se obtiene con el minimo zoom para calcular los angulos de las lineas
         //que unen cada punto
         geoDrawerAngulos->calcLimites(posiciones);
@@ -2407,7 +2415,7 @@ void Iofrontend::pintarCapaTerreno(VELatLong *currentGPSPos){
         bool downLimit = false;
         int numTilesDrawed = 0;
 
-        cout << "drawing screen" << endl;
+        //cout << "drawing screen" << endl;
 
         while (!upLimit || !downLimit){
             countTileX = 0;
@@ -2462,7 +2470,7 @@ void Iofrontend::pintarCapaTerreno(VELatLong *currentGPSPos){
             }
             countTileY++;
         }
-        //cout << "numTilesDrawed: " << numTilesDrawed << endl;
+//        cout << "numTilesDrawed: " << numTilesDrawed << endl;
     }
 }
 
@@ -2503,29 +2511,30 @@ void Iofrontend::drawTile(VELatLong *currentLatLon, int zoom, int sideTileX, int
     const int inicioY = (offsetY < 0) ? abs(offsetY) : 0;
 
     if (dir.existe(imgLocation)){
-        SDL_Surface *optimizedImage;
-        imgGestor.loadImgDisplay(imgLocation.c_str(), &optimizedImage);
-        const int finx = (gpsinoW - offsetX > optimizedImage->w ) ? optimizedImage->w  : gpsinoW - offsetX;
-        const int finy = (gpsinoH - offsetY > optimizedImage->h) ? optimizedImage->h : gpsinoH - offsetY;
+        SDL_Surface *optimizedImage = NULL;
+        if (imgGestor.loadImgDisplay(imgLocation.c_str(), &optimizedImage)){
+            const int finx = (gpsinoW - offsetX > optimizedImage->w ) ? optimizedImage->w  : gpsinoW - offsetX;
+            const int finy = (gpsinoH - offsetY > optimizedImage->h) ? optimizedImage->h : gpsinoH - offsetY;
 
 
-        for (int i=inicioX; i < finx; i++){
-            for (int j=inicioY; j < finy; j++){
-                Uint8 r,g,b;
+            for (int i=inicioX; i < finx; i++){
+                for (int j=inicioY; j < finy; j++){
+                    Uint8 r,g,b;
 
-//                SDL_GetRGB(getpixel(optimizedImage, i, j), optimizedImage->format,&r,&g,&b);
+    //                SDL_GetRGB(getpixel(optimizedImage, i, j), optimizedImage->format,&r,&g,&b);
 
-//                putpixelSafe(objPict->getImgGestor()->getSurface(), i + newPos.x + desplazaX, j + newPos.y + desplazaY,
-//                             SDL_MapRGB(optimizedImage->format,
-//                                        r > umbral.r ? 0xFF : 0,
-//                                        g > umbral.g ? 0xFF : 0,
-//                                        b > umbral.b ? 0xFF : 0));
+    //                putpixelSafe(objPict->getImgGestor()->getSurface(), i + newPos.x + desplazaX, j + newPos.y + desplazaY,
+    //                             SDL_MapRGB(optimizedImage->format,
+    //                                        r > umbral.r ? 0xFF : 0,
+    //                                        g > umbral.g ? 0xFF : 0,
+    //                                        b > umbral.b ? 0xFF : 0));
 
-                putpixelSafe(objPict->getImgGestor()->getSurface(), i + newPos.x + desplazaX, j + newPos.y + desplazaY,
-                             getpixel(optimizedImage, i, j));
+                    putpixelSafe(objPict->getImgGestor()->getSurface(), i + newPos.x + desplazaX, j + newPos.y + desplazaY,
+                                 getpixel(optimizedImage, i, j));
+                }
             }
+            SDL_FreeSurface(optimizedImage);
         }
-        SDL_FreeSurface(optimizedImage);
 
 //        cout << "tile: " << imgLocation << endl;
 //        Image565 imagen;

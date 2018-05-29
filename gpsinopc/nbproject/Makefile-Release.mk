@@ -42,6 +42,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/27549cb5/geodrawer.o \
 	${OBJECTDIR}/_ext/27549cb5/gpxloader.o \
 	${OBJECTDIR}/_ext/27549cb5/mercatorprojection.o \
+	${OBJECTDIR}/_ext/f5645dfe/KalmanFilter.o \
 	${OBJECTDIR}/_ext/511e4115/main.o \
 	${OBJECTDIR}/_ext/e0359366/scrapper.o
 
@@ -104,6 +105,11 @@ ${OBJECTDIR}/_ext/27549cb5/mercatorprojection.o: ../src/gpx/mercatorprojection.c
 	${MKDIR} -p ${OBJECTDIR}/_ext/27549cb5
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -DWIN -DWIN32 -I../../../ExternalLibs/SDL/libs/include -I../../../ExternalLibs/SDL/libs/include/SDL -I../../../ExternalLibs/crosslib/src/ziputils/zlib -I../../../ExternalLibs/crosslib/src/uiobjects -I../../../ExternalLibs/crosslib/src/sqllite -I../../../ExternalLibs/crosslib/src/libjpeg -I../../../ExternalLibs/crosslib/src/ziputils/unzip -I../../../ExternalLibs/curl-7.40.0-devel-mingw32/include -I../../../ExternalLibs/crosslib/src/tidy/include -I../../../ExternalLibs/crosslib/src/tidy/src -I../../../ExternalLibs/crosslib/src/gumbo-parser-master/src -I../../../ExternalLibs/crosslib/src/httpcurl -I../../../ExternalLibs/crosslib/src/httpcurl/jsoncpp-0.10.5/include -I../../../ExternalLibs/crosslib/src/rijndael -I../../BmpRLE -I../src -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/27549cb5/mercatorprojection.o ../src/gpx/mercatorprojection.cpp
+
+${OBJECTDIR}/_ext/f5645dfe/KalmanFilter.o: ../src/kalman/KalmanFilter.cpp
+	${MKDIR} -p ${OBJECTDIR}/_ext/f5645dfe
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -DWIN -DWIN32 -I../../../ExternalLibs/SDL/libs/include -I../../../ExternalLibs/SDL/libs/include/SDL -I../../../ExternalLibs/crosslib/src/ziputils/zlib -I../../../ExternalLibs/crosslib/src/uiobjects -I../../../ExternalLibs/crosslib/src/sqllite -I../../../ExternalLibs/crosslib/src/libjpeg -I../../../ExternalLibs/crosslib/src/ziputils/unzip -I../../../ExternalLibs/curl-7.40.0-devel-mingw32/include -I../../../ExternalLibs/crosslib/src/tidy/include -I../../../ExternalLibs/crosslib/src/tidy/src -I../../../ExternalLibs/crosslib/src/gumbo-parser-master/src -I../../../ExternalLibs/crosslib/src/httpcurl -I../../../ExternalLibs/crosslib/src/httpcurl/jsoncpp-0.10.5/include -I../../../ExternalLibs/crosslib/src/rijndael -I../../BmpRLE -I../src -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/f5645dfe/KalmanFilter.o ../src/kalman/KalmanFilter.cpp
 
 ${OBJECTDIR}/_ext/511e4115/main.o: ../src/main.cpp
 	${MKDIR} -p ${OBJECTDIR}/_ext/511e4115

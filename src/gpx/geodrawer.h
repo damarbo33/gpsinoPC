@@ -14,6 +14,8 @@ static const int googleZoom[]={16,15,14,13,12,11,10};
 #include <iostream>
 #include "mercatorprojection.h"
 #include "GeoStructs.h"
+#include "../kalman/KalmanFilter.h"
+
 
 using namespace std;
 
@@ -50,9 +52,9 @@ using namespace std;
     static const int anguloFlechas = 20;
     static const int hipotenusa = 20;  //Indica lo larga que es la flecha
     static const bool drawWaypoints = true;
-    static const int maxPendientePermitida = 100;  //En senderismo es posible pendientes del 100 o mayores. Pero establecemos este limite para evitar problemas con gps
+    static const int maxPendientePermitida = 30;  //En senderismo es posible pendientes del 100 o mayores. Pero establecemos este limite para evitar problemas con gps
     static const int limitePendienteLlano = 3;     //Establecemos que una pendiente menor al 3% es terreno llano
-    static const float margenPendiente = 0.05;     //En porcentaje 0.05 = 5% para medir cambios de tendencias en ascension o descenso
+    static const float margenPendiente = 0.01;     //En porcentaje 0.05 = 5% para medir cambios de tendencias en ascension o descenso
     static const float limiteVelocidadMin = 0.15;     //En porcentaje 0.9 = 90% para no contar velocidades demasiado peque�as en relacion a la distancia recorrida
     static const double minDiffAltToCumbres = 20.0;
 
@@ -110,6 +112,64 @@ class StatsClass{
         double tempDist;
         int numCoordRuta;
         int maxCoordRuta;
+};
+
+class StatRouteSegment{
+public:
+    StatRouteSegment(){};
+    
+    void reset(double lat, double lon, double alt){
+        iniPoint = 0;
+        endPoint = 0;
+        acumSubida = 0.0;
+        acumBajada = 0.0;
+        maxAltitud = alt;
+        minAltitud = alt;
+        distancia = 0;
+        maxDesnivel2Puntos = 0;
+        sumaPendienteSubida = 0;
+        sumaPendienteBajada = 0;
+        numPendienteSubida = 0;
+        numPendienteBajada = 0;
+        distLlano = 0.0;
+        distSubida = 0.0;
+        distBajada = 0.0;
+        velocidadMaxima = 0.0;
+        velocidadMinima = 300000; //La velocidad de la luz 300.000 m/s. ! A ver quien lo supera
+        sumaVelocidadMedia = 0;
+        numSumaVelocidad = 0;
+        velocidadMedia = 0;
+        tiempoTotal = 0;
+        tiempoParado = 0;
+        tiempoMovimiento = 0;
+    }
+    
+    int iniPoint;
+    int endPoint;
+    bool correccionGPS;
+    double acumSubida;
+    double acumBajada;
+    double maxAltitud;
+    double minAltitud;
+    double distancia;
+    double pendienteMediaSubida;
+    double pendienteMediaBajada;
+    double maxDesnivel2Puntos;
+    unsigned long long sumaPendienteSubida;
+    unsigned long long sumaPendienteBajada;
+    unsigned long numPendienteSubida;
+    unsigned long numPendienteBajada;
+    double distLlano;
+    double distSubida;
+    double distBajada;
+    double velocidadMaxima;
+    double velocidadMinima;
+    double sumaVelocidadMedia;
+    unsigned long numSumaVelocidad;
+    double velocidadMedia;
+    unsigned long long tiempoTotal;
+    unsigned long long tiempoParado;
+    unsigned long long tiempoMovimiento;
 };
 
 class GeoDrawer
@@ -239,7 +299,12 @@ class GeoDrawer
 
         void setMapNumPoints(int var){mapNumPoints = var;}
         int getMapNumPoints(){return mapNumPoints;}
-
+        
+        void calcEtapas(std::vector<std::string> * coordinates);
+        void calcDistDia(double lat, double lon, double alt, long time, StatsClass *stats, StatRouteSegment *statsRuta);
+        
+        int kalmanTest();
+        
     protected:
     private:
 

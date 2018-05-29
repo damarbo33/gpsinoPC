@@ -28,6 +28,7 @@ GeoDrawer::GeoDrawer(int w, int h){
     numPendienteBajada = 0;
     velocidadMedia = 0;
     numTopo = 0;
+    //kalmanTest();
 }
 
 /**
@@ -50,13 +51,202 @@ void GeoDrawer::centerScreenToLocation(double latitud, double longitud){
 }
 
 /**
-* Calcula los extremos de las longitudes y la latitud inferior para tener
-* una orientación del tamanyo final del track en pantalla
-*/
-void GeoDrawer::calcLimites(std::vector<std::string> * coordinates){
-    int datoResp [2]= {0,0};
+ * Calcula las etapas necesarias para recorrer la ruta con garantias
+ * 
+ * @param coordinates
+ */
+void GeoDrawer::calcEtapas(std::vector<std::string> * coordinates){
+    int numDias = 20;
+    double maxDesnivel = 1500.0;
+    //double maxKmDia = this->distancia / numDias;
+    double maxMDia = 90000;
+    int diasInicioAclim = 0;
+    double factorAclim = 0.65;
+    double incFactorAclim = diasInicioAclim == 0 ? 1 : (1 - factorAclim) / diasInicioAclim;
+    
     double lat;
     double lon;
+    double alt;
+    int numDia = 0;
+    
+    StatsClass stats;
+    StatRouteSegment statsRuta;
+    stats.maxCoordRuta = coordinates->size();
+    
+    std::ofstream file;
+    string filepath = "C:\\gps\\norway.gpx";
+    //can't enable exception now because of gcc bug that raises ios_base::failure with useless message
+    //file.exceptions(file.exceptions() | std::ios::failbit);
+    file.open(filepath, std::ios::out | std::ios::trunc);
+//    if (file.fail())
+//        throw std::ios_base::failure(std::strerror(errno));
+
+    //make sure write fails with exception if something is wrong
+//    file.exceptions(file.exceptions() | std::ios::failbit | std::ifstream::badbit);
+    
+    file << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" << endl
+    << "<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" version=\"1.1\" creator=\"RouteConverter\">" << endl
+    << "<metadata>" << endl
+    << "<name>Test file by gpsino</name>" << endl
+    << "</metadata>" << endl;
+            
+    for (stats.numCoordRuta=1; stats.numCoordRuta < stats.maxCoordRuta; stats.numCoordRuta++){
+       strSplitted2 = Constant::split(coordinates->at(stats.numCoordRuta),",");
+       if (strSplitted2.size() > 0){
+           lat = todouble(strSplitted2.at(GPXLAT));
+           lon = todouble(strSplitted2.at(GPXLON));
+           alt = todouble(strSplitted2.at(GPXALT));
+           
+            calcDistDia(lat,lon,alt,
+                        Constant::strToTipo<long>(strSplitted2.at(GPXTIME)),
+                        &stats,
+                        &statsRuta);
+            
+            if ( (numDia >= diasInicioAclim && (statsRuta.distancia >= maxMDia || statsRuta.acumSubida > maxDesnivel))
+                 || (numDia < diasInicioAclim && (statsRuta.distancia >= maxMDia * (factorAclim + incFactorAclim * numDia)  
+                       || statsRuta.acumSubida > maxDesnivel * (factorAclim + incFactorAclim * numDia)))   
+                 || stats.numCoordRuta == stats.maxCoordRuta - 1){
+                
+                numDia++;
+                cout << "Dia " << numDia << ". nCoord: " << stats.numCoordRuta
+                     << ". desnivel+: " << statsRuta.acumSubida << " m"   
+                     << ". distancia: " << statsRuta.distancia / 1000 << " km"
+                     << ". latlon: " << lat << "," << lon
+                     << endl;
+                
+                file << std::fixed << std::setprecision(6) << "<wpt lon=\"" << lon << "\" lat=\"" << lat << "\">" << endl
+                     << "<ele>" << alt << "</ele>" << endl
+                     << "<name>Dia " << numDia << ", " << std::setprecision(1) << (statsRuta.distancia / 1000) 
+                     << " km, " << std::setprecision(0) << statsRuta.acumSubida << " m. acum +" << "</name>" << endl
+                     << "</wpt>" << endl;
+                
+                statsRuta.reset(lat, lon, alt);
+            }
+        }
+    }
+    
+    file << "</gpx>" << endl;
+    file.close();
+}
+
+/**
+ * 
+ * @param lat
+ * @param lon
+ * @param alt
+ * @param time
+ * @param stats
+ * @param statsRuta
+ */
+void GeoDrawer::calcDistDia(double lat, double lon, double alt, long time, StatsClass *stats, StatRouteSegment *statsRuta){
+
+
+    //Variables temporales
+    double distanciaPuntos = 0.0;
+    double diferenciaAlt = 0.0;
+    double pendiente = 0.0;
+    double velocidadActual = 0.0;
+    double difTiempos = 0.0;
+
+    distanciaPuntos = fabs(getDistance(stats->lastLat, stats->lastLon, lat, lon)) * 1000; // en metros
+    diferenciaAlt = fabs(alt - stats->lastAlt);
+    //Calculamos la pendiente en porcentaje. Si la distancia de puntos es 0, le ponemos un
+    //desnivel del 100% (casi imposible normalmente)
+    pendiente = distanciaPuntos != 0.0 ? diferenciaAlt * 100 / distanciaPuntos : 100;
+
+    if (stats->numCoordRuta <= 1){
+        stats->init(lat, lon, alt);
+        statsRuta->reset(lat, lon, alt);
+    } else if (alt != 0.0){
+        //Si la altitud de la cumbre es exactamente 0.0 es muy probable que se haya EDITADO el track y
+        //que la altura no sea correcta. Por lo tanto no lo procesamos
+
+        //Nos fiamos de la coordenadas de latitud y longitud para calcular distancias
+        statsRuta->distancia += distanciaPuntos;
+        //No permitimos pendientes superiores a un porcentaje por posibles
+        //desajustes en las mediciones que obtenemos en el gps. (Si somos Felix Baumgartner
+        //lo deberiamos desactivar)
+        if (pendiente < maxPendientePermitida || correccionGPS == false){
+            //Calculamos las pendientes medias de subida y bajada
+            if (pendiente > limitePendienteLlano && alt > stats->lastAlt){
+                statsRuta->sumaPendienteSubida += pendiente;
+                statsRuta->numPendienteSubida++;
+                statsRuta->acumSubida += diferenciaAlt;
+            } else if (pendiente > limitePendienteLlano && alt < stats->lastAlt){
+                statsRuta->sumaPendienteBajada += pendiente;
+                statsRuta->numPendienteBajada++;
+                statsRuta->acumBajada += diferenciaAlt;
+            }
+        } //Fin correccion del gps
+
+        //Calculamos la distancia de subida, bajada o llano segun la pendiente
+        if (pendiente > limitePendienteLlano && alt > stats->lastAlt){
+            statsRuta->distSubida += distanciaPuntos;
+        } else if (pendiente > limitePendienteLlano && alt < stats->lastAlt){
+            statsRuta->distBajada += distanciaPuntos;
+        } else {
+            statsRuta->distLlano += distanciaPuntos;
+        }
+
+        //Maximo desnivel de dos puntos
+        if (diferenciaAlt > statsRuta->maxDesnivel2Puntos){
+                statsRuta->maxDesnivel2Puntos = diferenciaAlt;
+        }
+
+        //Se calcula el maximo y el minimo de altitud
+        if (alt > statsRuta->maxAltitud){
+            statsRuta->maxAltitud = alt;
+        }
+        if (alt < statsRuta->minAltitud){
+            statsRuta->minAltitud = alt;
+        }
+
+        difTiempos = fabs(time - stats->lastTime);
+        statsRuta->tiempoTotal += difTiempos;
+
+        //Calculamos las velocidades
+        if (difTiempos > 0.0 && distanciaPuntos > 0.0 ){
+            if (distanciaPuntos / difTiempos > limiteVelocidadMin || statsRuta->correccionGPS == false){
+                velocidadActual = distanciaPuntos / difTiempos;
+//                cout << std::setprecision(1) << "velocidadActual: " << (velocidadActual * 3600.0 / 1000.0) << " (km/h)"
+//                     << " distanciaPuntos: " << distanciaPuntos << " (m)"
+//                     << " tiempo: " << difTiempos << " (s)" <<  endl;
+                statsRuta->sumaVelocidadMedia += velocidadActual;
+                statsRuta->numSumaVelocidad++;
+                statsRuta->tiempoMovimiento += difTiempos;
+            } else {
+                statsRuta->tiempoParado += difTiempos;
+            }
+        } else {
+            velocidadActual = 0.0;
+            statsRuta->tiempoParado += difTiempos;
+        }
+
+        if (velocidadActual > statsRuta->velocidadMaxima){
+            statsRuta->velocidadMaxima = velocidadActual;
+        }
+
+        //No aceptamos una velocidad de 0 km/h para poner en la minima
+        if ((velocidadActual < statsRuta->velocidadMinima && velocidadActual > 0.0) || statsRuta->correccionGPS == false){
+            statsRuta->velocidadMinima = velocidadActual;
+        }
+
+        //Actualizamos valores. ESTO SIEMPRE AL FINAL******
+        stats->lastLat = lat;
+        stats->lastLon = lon;
+        stats->lastAlt = alt;
+        stats->lastTime = time;
+    }
+}
+
+/**
+* Calcula los extremos de las longitudes y la latitud inferior para tener
+* una orientacion del tamanyo final del track en pantalla
+*/
+void GeoDrawer::calcLimites(std::vector<std::string> * coordinates){
+    double lat;
+    double lon;
+    double alt;
 
     strSplitted2 = Constant::split(coordinates->at(0), ",");
     mapLonLeft = todouble(strSplitted2.at(1));
@@ -66,9 +256,28 @@ void GeoDrawer::calcLimites(std::vector<std::string> * coordinates){
 
     StatsClass stats;
     stats.maxCoordRuta = coordinates->size();
+    
+    alt = todouble(strSplitted2.at(GPXALT));
+    /* Set Matrix and Vector for Kalman Filter: */
+    MatrixXf A(1, 1); A << 1;
+    MatrixXf H(1, 1); H << 1;
+    MatrixXf Q(1, 1); Q << 10;
+    MatrixXf R(1, 1); R << 20;
+    VectorXf X0(1); X0 << alt;
+    MatrixXf P0(1, 1); P0 << 20;
+    
+    /* Create The Filter */
+    KalmanFilter filter1(1, 0);
+
+    /* Initialize the Filter*/
+    filter1.setFixed(A, H, Q, R);
+    filter1.setInitial(X0, P0);
+
+    /* Create measure vector, and store measure value */
+    VectorXf Z(1);
+  
 
     for (stats.numCoordRuta=1; stats.numCoordRuta < stats.maxCoordRuta; stats.numCoordRuta++){
-
         strSplitted2 = Constant::split(coordinates->at(stats.numCoordRuta),",");
         if (strSplitted2.size() > 0){
             lon = todouble(strSplitted2.at(GPXLON));
@@ -86,11 +295,19 @@ void GeoDrawer::calcLimites(std::vector<std::string> * coordinates){
             if (lat < mapLatBottom){
                 mapLatBottom = lat;
             }
-
-            calcularEstadisticasRuta(lat, lon,
-                                     todouble(strSplitted2.at(GPXALT)),
+            
+            alt = todouble(strSplitted2.at(GPXALT));
+            filter1.predict(); //Predict phase
+            Z << alt;
+            filter1.correct( Z ); //Correction phase
+            
+            //cout << "X" << stats.numCoordRuta << ": " << filter1.X[0] << " vs " << alt  << endl;
+//            if (stats.numCoordRuta % 3 == 0 || stats.numCoordRuta <= 1){
+                calcularEstadisticasRuta(lat, lon,
+                                     alt,//filter1.X[0],
                                      Constant::strToTipo<long>(strSplitted2.at(GPXTIME)),
                                      &stats);
+//            }
         }
     }
 
@@ -181,8 +398,6 @@ void GeoDrawer::procesaPicosTerreno(double lat, double lon, double alt, long tim
 *
 */
 void GeoDrawer::calcularEstadisticasRuta(double lat, double lon, double alt, long time, StatsClass *stats){
-
-
     //Variables temporales
     double distanciaPuntos = 0.0;
     double diferenciaAlt = 0.0;
@@ -192,6 +407,7 @@ void GeoDrawer::calcularEstadisticasRuta(double lat, double lon, double alt, lon
 
     distanciaPuntos = fabs(getDistance(stats->lastLat, stats->lastLon, lat, lon)) * 1000; // en metros
     diferenciaAlt = fabs(alt - stats->lastAlt);
+    //diferenciaAlt = fabs(filter1->X - stats->lastAlt);
     //Calculamos la pendiente en porcentaje. Si la distancia de puntos es 0, le ponemos un
     //desnivel del 100% (casi imposible normalmente)
     pendiente = distanciaPuntos != 0.0 ? diferenciaAlt * 100 / distanciaPuntos : 100;
@@ -238,7 +454,7 @@ void GeoDrawer::calcularEstadisticasRuta(double lat, double lon, double alt, lon
             } else if ( alt > stats->alturaCumbre * (double)(1.0 + margenPendiente) && processDiff ){
                 //Estamos subiendo, procesa la altura como un valle
                 procesaPicosTerreno(lat, lon, alt, time, stats, false);
-            } else if (alt < stats->alturaValle * (double)(1.0 - margenPendiente) && processDiff){
+            } else if (alt > 0.0 && alt < stats->alturaValle * (double)(1.0 - margenPendiente) && processDiff){
                 //Estamos bajando. Procesa la altura como una cumbre
                 procesaPicosTerreno(lat, lon, alt, time, stats, true);
             } else if (alt != 0.0){
@@ -588,3 +804,38 @@ void GeoDrawer::calcTilesPixels(){
 
 }
 
+
+int GeoDrawer::kalmanTest() {
+ /* Set Matrix and Vector for Kalman Filter: */
+  MatrixXf A(1, 1); A << 1;
+  MatrixXf H(1, 1); H << 1;
+  MatrixXf Q(1, 1); Q << 0;
+  MatrixXf R(1, 1); R << 0.1;
+  VectorXf X0(1); X0 << 0;
+  MatrixXf P0(1, 1); P0 << 1;
+
+  /* Create The Filter */
+  KalmanFilter filter1(1, 0);
+
+  /* Initialize the Filter*/
+  filter1.setFixed(A, H, Q, R);
+  filter1.setInitial(X0, P0);
+
+  /* Create measure vector, and store measure value */
+  VectorXf Z(1);
+  float mesaure[10] = {0.39, 0.50, 0.48, 0.29, 0.25, 0.32, 0.34, 0.48, 0.41, 0.45};
+
+  /* This loop simulate the measure/prediction process */
+  for (int i = 0; i < 10; ++i)
+  {
+    
+    filter1.predict(); //Predict phase
+    Z << mesaure[i];
+    filter1.correct( Z ); //Correction phase
+  
+    cout << "X" << i << ": " << filter1.X << endl;
+
+  }
+
+	return 0;
+}
